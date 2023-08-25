@@ -1,32 +1,34 @@
 <script setup lang="ts">
 import ChangesetCard from './ChangesetCard.vue'
+import { useQuery } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
+import { computed } from 'vue'
+
+const { result, loading, error, refetch } = useQuery(gql`
+query MyQuery($uid: Int!) {
+  watchedChangesets(uid: $uid) {
+    csid
+	lastActivity
+    ts
+    hasResponse
+    username
+  }
+}`, {
+    uid: 9490212,
+  })
+
+const watched_changesets = computed(() => result.value?.watchedChangesets)
+
 </script>
 
 <template>
 	<section class="changeset-list">
-		<ChangesetCard
-			changeset-id="123455"
-			user-name="emerson"
-			has-response="false"
-			num-changesets-after="0"
-		/>
-		<ChangesetCard
-			changeset-id="123456"
-			user-name="emerson"
-			has-response="true"
-			num-changesets-after="0"
-		/>
-		<ChangesetCard
-			changeset-id="123457"
-			user-name="emerson2"
-			has-response="false"
-			num-changesets-after="5"
-		/>
-		<ChangesetCard
-			changeset-id="123458"
-			user-name="emerson4"
-			has-response="true"
-			num-changesets-after="6"
+		<p>Your watched changesets</p>
+		<ChangesetCard v-for="changeset in watched_changesets" :key="changeset.csid"
+			:changeset-id="changeset.csid"
+			:user-name="changeset.username"
+			:has-response="changeset.hasResponse"
+			:last-activity="changeset.lastActivity"
 		/>
 	</section>
 </template>
