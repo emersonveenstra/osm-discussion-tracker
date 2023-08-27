@@ -24,7 +24,11 @@ query MyQuery($csid: Int!) {
     }))
 
 const changeset_details = computed(() => result.value?.getChangesetDetails ?? false)
-console.log(changeset_details)
+
+function resolveChangeset() {
+  
+}
+
 </script>
 
 <template>
@@ -37,8 +41,13 @@ console.log(changeset_details)
         <span class="username">{{ comment.username }} at {{ comment.ts }} said:</span>
         <p>{{ comment.comment }}</p>
       </div>
+      <p>Add comment to changeset:</p>
+      <textarea></textarea>
     </section>
     <section class="changeset-viewer">
+    </section>
+    <section class="buttons">
+      <button @click="resolveChangeset">Resolve changeset</button>
     </section>
   </div>
 </template>

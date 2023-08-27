@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useChangesetStore } from '@/stores/changesets';
+const changesetData = useChangesetStore();
 import ChangesetList from '../components/ChangesetList.vue'
 import ChangesetDetail from '../components/ChangesetDetail.vue'
 
@@ -7,7 +9,7 @@ import ChangesetDetail from '../components/ChangesetDetail.vue'
 <template>
   <main>
     <ChangesetList />
-    <ChangesetDetail />
+    <ChangesetDetail v-if="changesetData.currentChangeset !== 0"/>
   </main>
 </template>
 
@@ -15,9 +17,6 @@ import ChangesetDetail from '../components/ChangesetDetail.vue'
   main {
     display: flex;
     flex-flow: row nowrap;
-  }
-  .changeset-list {
-    flex: 0 0 auto;
   }
 
   .changeset-detail {

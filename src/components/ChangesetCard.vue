@@ -6,6 +6,7 @@ defineProps<{
   userName: string,
   hasResponse: boolean,
   lastActivity: string,
+  hasNewChangesets: boolean,
 }>()
 
 function viewDetails(csid: number) {
@@ -14,13 +15,33 @@ function viewDetails(csid: number) {
 </script>
 
 <template>
-  <div class="changeset-card {% hasResponse ? 'has-response' : 'no-response' %}" @click="viewDetails(changesetId)">
-	<span class="changeset-id">{{ changesetId }} by {{ userName }}</span>
+  <div class="changeset-card" :class="{ hasResponse: hasResponse, hasNewChangesets: hasNewChangesets }" @click="viewDetails(changesetId)">
+    <span class="changeset-id">{{ changesetId }}</span>
+    <span class="changeset-creator">by {{ userName }}</span>
+    <span v-if="hasResponse">User has new comment for you!</span>
+    <span v-else-if="hasNewChangesets">User has made changesets after this comment</span>
   </div>
 </template>
 
 <style scoped>
+  div {
+    border-bottom: 1px solid black;
+    padding: 10px;
+    cursor: pointer;
+  }
   div span {
     display: block;
+    font-size: 14px;
+  }
+  .changeset-id {
+    font-weight: bold;
+  }
+
+  .hasNewChangesets {
+    color: rgb(212, 212, 18);
+  }
+
+  .hasResponse {
+    color: green;
   }
 </style>

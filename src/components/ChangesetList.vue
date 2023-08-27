@@ -11,10 +11,11 @@ query MyQuery($uid: Int!) {
 	lastActivity
     ts
     hasResponse
+	hasNewChangesets
     username
   }
 }`, {
-    uid: 9490212,
+    uid: 11548585,
   })
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
@@ -24,11 +25,42 @@ const watched_changesets = computed(() => result.value?.watchedChangesets)
 <template>
 	<section class="changeset-list">
 		<p>Your watched changesets</p>
-		<ChangesetCard v-for="changeset in watched_changesets" :key="changeset.csid"
+		<template v-for="changeset in watched_changesets"  :key="changeset.csid">
+			<ChangesetCard v-if="changeset.hasResponse"
 			:changeset-id="changeset.csid"
 			:user-name="changeset.username"
 			:has-response="changeset.hasResponse"
+			:has-new-changesets="changeset.hasNewChangesets"
 			:last-activity="changeset.lastActivity"
 		/>
+		</template>
+		<template v-for="changeset in watched_changesets"  :key="changeset.csid">
+			<ChangesetCard v-if="changeset.hasNewChangesets && !changeset.hasResponse"
+			:changeset-id="changeset.csid"
+			:user-name="changeset.username"
+			:has-response="changeset.hasResponse"
+			:has-new-changesets="changeset.hasNewChangesets"
+			:last-activity="changeset.lastActivity"
+		/>
+		</template>
+		<template v-for="changeset in watched_changesets"  :key="changeset.csid">
+			<ChangesetCard v-if="!changeset.hasResponse && !changeset.hasNewChangesets"
+			:changeset-id="changeset.csid"
+			:user-name="changeset.username"
+			:has-response="changeset.hasResponse"
+			:has-new-changesets="changeset.hasNewChangesets"
+			:last-activity="changeset.lastActivity"
+		/>
+		</template>
 	</section>
 </template>
+
+<style scoped>
+	.changeset-list {
+		flex: 0 0 auto;
+	}
+	p {
+		padding: 10px;
+		border-bottom: 1px solid black;
+	}
+</style>

@@ -19,7 +19,6 @@ def parseFile(changesetFile, doReplication):
 			continue
 
 		if (elem.attrib.get('closed_at', False) == False):
-			print (f'{elem.attrib}')
 			continue
 
 		parsedCount += 1
@@ -77,6 +76,7 @@ def doCron():
 			state_file = f.read().decode().split('\n')[2]
 			current_state = int(re.search('(\d+)', state_file)[1])
 			if (last_state != current_state):
+				print(f'importing state file {last_state} to {current_state}')
 				for state in range(last_state, current_state+1):
 					doReplication(str(state))
 			else:

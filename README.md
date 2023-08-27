@@ -12,7 +12,9 @@ CREATE TABLE odt_changeset (
   uid bigint not null,
   ts timestamp without time zone not null,
   username text not null,
-  comment text not null
+  comment text not null,
+  resolved_by bigint[],
+  UNIQUE(csid)
 );
 CREATE TABLE odt_comment (
   csid bigint not null,
@@ -20,6 +22,12 @@ CREATE TABLE odt_comment (
   ts timestamp without time zone not null,
   username text not null,
   comment text not null
+);
+CREATE TABLE odt_user (
+  uid bigint not null,
+  username text not null,
+  isActive bool not null,
+  UNIQUE(uid)
 );
 CREATE TABLE odt_state (
   last_state bigint default 0,
@@ -36,5 +44,5 @@ export DB_PORT=5432
 export DB_USER='odt'
 export DB_PASS='odt'
 export DB_NAME='odt'
-```
+``` 
 
