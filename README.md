@@ -17,11 +17,13 @@ CREATE TABLE odt_changeset (
   UNIQUE(csid)
 );
 CREATE TABLE odt_comment (
+  comment_id text not null,
   csid bigint not null,
   uid bigint not null,
   ts timestamp without time zone not null,
   username text not null,
-  comment text not null
+  comment text not null,
+  UNIQUE(comment_id)
 );
 CREATE TABLE odt_user (
   uid bigint not null,
@@ -30,10 +32,11 @@ CREATE TABLE odt_user (
   UNIQUE(uid)
 );
 CREATE TABLE odt_state (
-  last_state bigint default 0,
+  min_state bigint default 0,
+  max_state bigint default 0,
   update_in_progress boolean default false
 );
-insert into odt_state (last_state) values (0);
+insert into odt_state (min_state, max_state) values (0,0);
 ```
 
 
