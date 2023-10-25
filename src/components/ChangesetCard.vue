@@ -18,8 +18,8 @@ function viewDetails(csid: number) {
   <div class="changeset-card" :class="{ hasResponse: hasResponse, hasNewChangesets: hasNewChangesets }" @click="viewDetails(changesetId)">
     <span class="changeset-id">{{ changesetId }}</span>
     <span class="changeset-creator">by {{ userName }}</span>
-    <span v-if="hasResponse">User has new comment for you!</span>
-    <span v-else-if="hasNewChangesets">User has made changesets after this comment</span>
+    <span v-if="hasResponse">Needs Reply</span>
+    <span v-else-if="hasNewChangesets">Needs Escalation</span>
   </div>
 </template>
 
