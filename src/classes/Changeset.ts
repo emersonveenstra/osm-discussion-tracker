@@ -1,12 +1,10 @@
-import type { Discussion } from "./Discussion";
-
 export class Changeset {
 	constructor (
-		public id: number,
-		public userName: string,
-		public timestamp: Date,
-		public discussion: Set<Discussion>,
-		public hasResponse: boolean,
-		public numChangesetsAfter: number
+		public csid: number = 0,
+		public username: string = "none",
+		public ts: Date = new Date(),
+		public hasResponse: boolean = false,
+		public hasNewChangesets: boolean = false,
+		public lastActivity: Date = new Date()
 	) {}
 }
