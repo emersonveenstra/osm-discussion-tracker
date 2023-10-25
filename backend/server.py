@@ -13,7 +13,7 @@ def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
 	with conn.cursor() as curs:
 		all_changeset_query = curs.execute('select distinct odt_changeset.csid as csid, odt_changeset.uid as uid, odt_changeset.username as username, odt_changeset.ts as ts, odt_changeset.comment as comment from odt_changeset left join odt_comment on odt_changeset.csid = odt_comment.csid where odt_comment.uid = %s  order by odt_changeset.csid desc', (uid,))
 		for changeset in all_changeset_query.fetchall():
-			all_comments = curs.execute('select uid,ts from odt_comment where csid=%s order by ts desc', (changeset["csid"],)).fetchall()
+			all_comments = curs.execute('select uid,ts from odt_comment where csid=%s order by ts asc', (changeset["csid"],)).fetchall()
 			owner_last_response = datetime.fromtimestamp(0)
 			our_last_response = datetime.fromtimestamp(0)
 			for comment in all_comments:
@@ -46,7 +46,7 @@ def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
 def get_changeset_comments(csid: int) -> typing.List["Comment"]:
 	all_comments = []
 	with conn.cursor() as curs:
-		all_changeset_query = curs.execute('select * from odt_comment where csid = %s', (csid,))
+		all_changeset_query = curs.execute('select * from odt_comment where csid = %s order by ts asc', (csid,))
 		for changeset in all_changeset_query.fetchall():
 			all_comments.append(
 				Comment(
@@ -62,7 +62,7 @@ def get_changeset_comments(csid: int) -> typing.List["Comment"]:
 def get_changeset_details(csid: int) -> "FullChangeset":
 	all_comments = []
 	with conn.cursor() as curs:
-		all_comment_query = curs.execute('select * from odt_comment where csid = %s', (csid,))
+		all_comment_query = curs.execute('select * from odt_comment where csid = %s order by ts asc', (csid,))
 		for changeset in all_comment_query.fetchall():
 			all_comments.append(
 				Comment(
