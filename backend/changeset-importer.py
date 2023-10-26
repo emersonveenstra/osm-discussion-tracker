@@ -135,20 +135,23 @@ def doReplication(first_state, last_state, step=1):
 		
 	print(f'finished importing {len(changesets)} changesets and {len(comments)} comments')
 
-def doCron():
+def doCron(limit = 1000):
 	with conn.cursor() as curs:
 		curs.execute('select max_state from odt_state')
-		max_state = curs.fetchone()["max_state"]
+		old_max_state = curs.fetchone()["max_state"]
 		with urllib.request.urlopen('https://planet.openstreetmap.org/replication/changesets/state.yaml') as f:
 			state_file = f.read().decode().split('\n')[2]
-			current_state = int(re.search('(\d+)', state_file)[1])
-			if (max_state != current_state):
-				print(f'importing state file {max_state} to {current_state}')
-				doReplication(max_state, current_state+1)
-				curs.execute('update odt_state set max_state = %s', (current_state,))
+			planet_current_state = int(re.search('(\d+)', state_file)[1])
+			if (planet_current_state != old_max_state):
+				new_max_state = planet_current_state
+				if (old_max_state + limit < planet_current_state):
+					new_max_state = old_max_state + limit
+				print(f'importing state file {old_max_state} to {new_max_state}')
+				doReplication(old_max_state, new_max_state+1)
+				curs.execute('update odt_state set max_state = %s', (new_max_state,))
 				conn.commit()
 			else:
-				print(f'{current_state} is the last state file available')
+				print(f'{planet_current_state} is the last state file available')
 
 def doBackfill(number_to_backfill):
 	with conn.cursor() as curs:
@@ -164,7 +167,7 @@ def doBackfill(number_to_backfill):
 argparser = argparse.ArgumentParser(description="Import OSM Changesets from a file")
 argparser.add_argument('-f', '--file', action='store', dest='fileName', help='OSM changeset file to import')
 argparser.add_argument('-r', '--replication', action='store', dest='replication', help='OSM replication state number to import')
-argparser.add_argument('-c', '--cron', action='store_true', dest='isCron', default=False, help='cron mode to import the next state files')
+argparser.add_argument('-c', '--cron', action='store', dest='isCron', nargs='?', const=1000, type=int, help='cron mode to import the next number of state files, limited by the number specified (default limit 1000)')
 argparser.add_argument('-b', '--backfill', action='store', dest='toBackfill', nargs='?', const=1000, type=int, help='number of state files to backfill (default 1000)')
 
 args = argparser.parse_args()
@@ -175,6 +178,6 @@ if (args.fileName):
 elif (args.replication):
 	doReplication(args.replication)
 elif (args.isCron):
-	doCron()
+	doCron(args.isCron)
 elif (args.toBackfill):
 	doBackfill(args.toBackfill)
