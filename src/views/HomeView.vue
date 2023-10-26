@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useChangesetStore } from '@/stores/changesets';
 const changesetData = useChangesetStore();
+import { useUserStore } from '@/stores/user';
+const userData = useUserStore();
 import ChangesetDetail from '../components/ChangesetDetail.vue'
 
 import ChangesetCard from '../components/ChangesetCard.vue'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { Changeset } from '@/classes/Changeset';
 
 const { result, loading, error, refetch, onResult } = useQuery(gql`
@@ -20,7 +22,7 @@ query MyQuery($uid: Int!) {
     username
   }
 }`, {
-    uid: 11548585,
+    uid: userData.userID,
   })
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)

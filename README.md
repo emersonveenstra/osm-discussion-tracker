@@ -13,7 +13,6 @@ CREATE TABLE odt_changeset (
   ts timestamp without time zone not null,
   username text not null,
   comment text not null,
-  resolved_by bigint[],
   UNIQUE(csid)
 );
 CREATE TABLE odt_comment (
@@ -30,6 +29,12 @@ CREATE TABLE odt_user (
   username text not null,
   isActive bool not null,
   UNIQUE(uid)
+);
+CREATE TABLE odt_resolved (
+  uid bigint not null,
+  csid bigint not null,
+  resolved_at timestamp without time zone not null,
+  expires_at timestamp without time zone
 );
 CREATE TABLE odt_state (
   min_state bigint default 0,

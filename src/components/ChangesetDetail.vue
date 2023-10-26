@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useChangesetStore } from '@/stores/changesets';
 const changesetData = useChangesetStore();
+import { useUserStore } from '@/stores/user';
+const userData = useUserStore();
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { computed } from 'vue'
@@ -26,7 +28,7 @@ query MyQuery($csid: Int!) {
 const changeset_details = computed(() => result.value?.getChangesetDetails ?? false)
 
 function resolveChangeset() {
-  
+  fetch(`http://127.0.0.1:8000/resolve?uid=${userData.userID}&csid=${changesetData.currentChangeset}`)
 }
 
 </script>
