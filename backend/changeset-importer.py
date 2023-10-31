@@ -11,55 +11,6 @@ from psycopg.rows import dict_row
 
 conn = psycopg.connect(f"postgresql://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASS')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_NAME')}", row_factory=dict_row)
 
-def parseFile(changesetFile, doReplication):
-	parsedCount = 0
-	context = etree.iterparse(changesetFile)
-	next(context)
-	for action, elem in context:
-		if(elem.tag != 'changeset'):
-			continue
-
-		if (elem.attrib.get('closed_at', False) == False):
-			continue
-
-		parsedCount += 1
-
-		csid = elem.attrib['id']
-		uid = elem.attrib.get('uid', '0')
-		username = elem.attrib.get('user', 'unknown')
-		ts = elem.attrib.get('closed_at')
-
-		if(doReplication):
-			with conn.cursor() as curs:
-				does_csid_exist = len(curs.execute("select from odt_changeset where csid = %s", (csid,))) == 1
-		
-		cs_comment = ""
-		for tag in elem.iterchildren(tag='tag'):
-			if tag.attrib['k'] == "comment":
-				cs_comment = tag.attrib["v"]
-		
-		if not does_csid_exist:
-			with conn.cursor() as curs:
-				curs.execute("insert into odt_changeset (csid, uid, ts, username, comment) values (%s, %s, %s, %s, %s)", (csid, uid, ts, username, cs_comment))
-				conn.commit()
-
-		for discussion in elem.iterchildren(tag='discussion'):
-			for commentElement in discussion.iterchildren(tag='comment'):
-				comment_uid = commentElement.attrib.get('uid', '0')
-				comment_username = commentElement.attrib.get('user', 'unknown')
-				comment_ts = commentElement.attrib.get('date')
-				for text in commentElement.iterchildren(tag='text'):
-					comment_text = text.text
-				with conn.cursor() as curs:
-					curs.execute("insert into odt_comment (csid, uid, ts, username, comment) values (%s, %s, %s, %s, %s)", (csid, comment_uid, comment_ts, comment_username, comment_text))
-					conn.commit()
-
-		if((parsedCount % 10000) == 0):
-			print(f"Processed {parsedCount} changesets")
-
-		elem.clear()
-	print(f'finished importing {parsedCount} records')
-
 def doReplication(first_state, last_state, step=1):
 	changesets = {}
 	comments = {}
@@ -165,17 +116,13 @@ def doBackfill(number_to_backfill):
 
 
 argparser = argparse.ArgumentParser(description="Import OSM Changesets from a file")
-argparser.add_argument('-f', '--file', action='store', dest='fileName', help='OSM changeset file to import')
 argparser.add_argument('-r', '--replication', action='store', dest='replication', help='OSM replication state number to import')
 argparser.add_argument('-c', '--cron', action='store', dest='isCron', nargs='?', const=1000, type=int, help='cron mode to import the next number of state files, limited by the number specified (default limit 1000)')
 argparser.add_argument('-b', '--backfill', action='store', dest='toBackfill', nargs='?', const=1000, type=int, help='number of state files to backfill (default 1000)')
 
 args = argparser.parse_args()
 
-if (args.fileName):
-	changesetFile = open(args.fileName, 'rb')
-	parseFile(changesetFile, False)
-elif (args.replication):
+if (args.replication):
 	doReplication(args.replication)
 elif (args.isCron):
 	doCron(args.isCron)
