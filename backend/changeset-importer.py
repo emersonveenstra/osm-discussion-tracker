@@ -115,7 +115,7 @@ def doBackfill(number_to_backfill):
 		conn.commit()
 
 
-argparser = argparse.ArgumentParser(description="Import OSM Changesets from a file")
+argparser = argparse.ArgumentParser(description="Import OSM Changeset replication files")
 argparser.add_argument('-r', '--replication', action='store', dest='replication', help='OSM replication state number to import')
 argparser.add_argument('-c', '--cron', action='store', dest='isCron', nargs='?', const=1000, type=int, help='cron mode to import the next number of state files, limited by the number specified (default limit 1000)')
 argparser.add_argument('-b', '--backfill', action='store', dest='toBackfill', nargs='?', const=1000, type=int, help='number of state files to backfill (default 1000)')
