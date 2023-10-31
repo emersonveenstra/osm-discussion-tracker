@@ -124,7 +124,7 @@ args = argparser.parse_args()
 
 if (args.replication):
 	doReplication(args.replication, args.replication+1)
-elif (args.isCron):
+if (args.isCron):
 	doCron(args.isCron)
-elif (args.toBackfill):
+if (args.toBackfill):
 	doBackfill(args.toBackfill)
