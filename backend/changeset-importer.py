@@ -67,7 +67,7 @@ def doReplication(first_state, last_state, step=1):
 		stateString = str(state)
 		urlState = f'00{stateString[0]}/{stateString[1:4]}/{stateString[4:7]}'
 		url = f'https://planet.openstreetmap.org/replication/changesets/{urlState}.osm.gz'
-		with urllib.request.urlopen(url) as f:
+		with urllib.request.urlopen(url, timeout=10) as f:
 			osmfile = gzip.open(BytesIO(f.read()))
 			print(f'importing {urlState}')
 			context = etree.iterparse(osmfile)
