@@ -103,8 +103,8 @@ def doCron(limit = 1000):
 				new_max_state = planet_current_state
 				if (old_max_state + limit < planet_current_state):
 					new_max_state = old_max_state + limit
-				print(f'importing state file {old_max_state} to {new_max_state}')
-				doReplication(old_max_state, new_max_state+1)
+				print(f'importing state file {old_max_state+1} to {new_max_state}')
+				doReplication(old_max_state+1, new_max_state+1)
 				curs.execute('update odt_state set max_state = %s', (new_max_state,))
 				conn.commit()
 			else:
@@ -115,8 +115,8 @@ def doBackfill(number_to_backfill):
 		curs.execute('select min_state from odt_state')
 		min_state = curs.fetchone()["min_state"]
 		new_min_state = min_state - number_to_backfill
-		print(f'backfilling state files {min_state} to {new_min_state}')
-		doReplication(min_state, new_min_state, -1)
+		print(f'backfilling state files {min_state-1} to {new_min_state}')
+		doReplication(min_state-1, new_min_state-1, -1)
 		curs.execute('update odt_state set min_state = %s', (new_min_state,))
 		conn.commit()
 
