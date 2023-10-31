@@ -6,7 +6,13 @@ import typing
 from datetime import datetime
 from psycopg.rows import dict_row
 
-conn = psycopg.connect(f"postgresql://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASS')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT')}/{os.environ.get('DB_NAME')}", row_factory=dict_row)
+DB_HOST = os.environ.get('DB_HOST', '127.0.0.1')
+DB_PORT = os.environ.get('DB_PORT', 5432)
+DB_NAME = os.environ.get('DB_NAME', 'odt')
+DB_USER = os.environ.get('DB_USER', 'odt')
+DB_PASS = os.environ.get('DB_PASS', 'odt')
+
+conn = psycopg.connect(f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}", row_factory=dict_row)
 
 all_watched_cs_query = '''
 	select distinct
