@@ -125,20 +125,6 @@ def get_changeset_details(csid: int) -> "FullChangeset":
 				discussion=all_comments
 			)
 			return full_changeset
-		
-
-def update_resolved_status(uid: int, csid: int, doResolve: bool):
-	with conn.cursor() as curs:
-		get_current_resolved_list_query = curs.execute('select resolved_by from odt_changesets where csid=%s', (csid,)).fetchone()
-		current_resolved_list = get_current_resolved_list_query["resolved_by"]
-		print(current_resolved_list)
-		if doResolve is True and current_resolved_list.count(uid) == 0:
-			current_resolved_list.append(uid)
-		elif doResolve is False and current_resolved_list.count(uid) != 0:
-			current_resolved_list.remove(uid)
-		update_current_resolved_query = curs.execute('update odt_changesets set resolved_by = %s where csid=%s', (current_resolved_list, csid))
-		conn.commit()
-		return "updated!"
 
 
 @strawberry.type
@@ -172,9 +158,5 @@ class Query:
 	watched_changesets: typing.List["Changeset"] = strawberry.field(resolver=get_watched_changesets)
 	get_changeset_comments: typing.List["Comment"] = strawberry.field(resolver=get_changeset_comments)
 	get_changeset_details: "FullChangeset" = strawberry.field(resolver=get_changeset_details)
-
-@strawberry.type
-class Mutation:
-	update_resolved_status: str = strawberry.field(resolver=update_resolved_status)
 
 schema = strawberry.Schema(query=Query)
