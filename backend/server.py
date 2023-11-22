@@ -103,7 +103,7 @@ def get_changeset_comments(csid: int) -> typing.List["Comment"]:
 def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 	all_comments = []
 	with conn.cursor() as curs:
-		all_comment_query = curs.execute('select * from odt_comment where csid = %s order by ts desc', (csid,))
+		all_comment_query = curs.execute('select * from odt_comment where csid = %s order by ts asc', (csid,))
 		for changeset in all_comment_query.fetchall():
 			all_comments.append(
 				Comment(
