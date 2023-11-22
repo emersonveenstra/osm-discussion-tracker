@@ -8,8 +8,10 @@ import ChangesetDetail from '../components/ChangesetDetail.vue'
 import ChangesetCard from '../components/ChangesetCard.vue'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Changeset } from '@/classes/Changeset';
+
+const listOffset = ref(0)
 
 const { result, loading, error, refetch, onResult } = useQuery(gql`
 query MyQuery($uid: Int!, $limit: Int!, $offset: Int!) {
@@ -24,7 +26,7 @@ query MyQuery($uid: Int!, $limit: Int!, $offset: Int!) {
 }`, {
     uid: userData.userID,
     limit: 20,
-    offset: 0,
+    offset: computed(() => listOffset.value),
   })
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
@@ -39,6 +41,11 @@ onResult(queryResult => {
       changesetData.watchedChangesets.set(changeset.csid, new Changeset(changeset.csid, changeset.username, changeset.ts, changeset.hasResponse, changeset.hasNewChangesets))
   }
 })
+
+function loadNextPage(newOffset: number) {
+  listOffset.value = newOffset;
+  console.log(listOffset.value)
+}
 </script>
 
 <template>
@@ -54,6 +61,10 @@ onResult(queryResult => {
         :last-activity="changeset.lastActivity"
       />
       </template>
+      <div class="pagination">
+        <button class="next" @click="loadNextPage(listOffset-1)" v-if="listOffset != 0">Prev</button>
+        <button class="next" @click="loadNextPage(listOffset+1)">Next</button>
+      </div>
 	  </section>
     <ChangesetDetail v-if="changesetData.currentChangeset !== 0" />
   </main>
