@@ -54,3 +54,29 @@ export DB_PASS='odt'
 export DB_NAME='odt'
 ``` 
 
+systemd service and timer for changeset importer:
+```
+[Unit]
+Description=changeset importer
+Wants=network.target
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/emerson/repos/osm-discussion-tracker
+ExecStart=/home/emerson/repos/osm-discussion-tracker/.venv/bin/python3 backend/changeset-importer.py -c 20 -b 20
+
+[Install]
+WantedBy=multi-user.target
+```
+```
+[Unit]
+Description=changeset importer timer
+
+[Timer]
+OnCalendar=minutely
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
