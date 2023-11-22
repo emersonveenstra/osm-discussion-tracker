@@ -81,9 +81,14 @@ function loadNextPage(newOffset: number) {
 	main {
 		display: flex;
 		flex-flow: row nowrap;
+		height: 100vh;
 	}
 
 	.changeset-detail {
 		flex: 1 1 100%;
+	}
+	.changeset-list {
+		height: 100%;
+		overflow: auto;
 	}
 </style>
