@@ -10,11 +10,11 @@ import router from './router'
 
 const app = createApp({
 	setup () {
-	  provide(DefaultApolloClient, apolloClient)
+		provide(DefaultApolloClient, apolloClient)
 	},
-  
+	
 	render: () => h(App),
-  })
+})
 
 app.use(createPinia())
 app.use(router)
