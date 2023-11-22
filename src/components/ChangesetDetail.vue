@@ -31,6 +31,10 @@ function resolveChangeset() {
 	fetch(`http://127.0.0.1:8000/resolve?uid=${userData.userID}&csid=${changesetData.currentChangeset}`)
 }
 
+const achaviChangeset = computed(() => {
+	return `https://overpass-api.de/achavi/?changeset=${changesetData.currentChangeset}&relations=true`
+})
+
 </script>
 
 <template>
@@ -51,19 +55,26 @@ function resolveChangeset() {
 				<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ comment.ts }}</p>
 				<p class="comment-text">{{ comment.comment }}</p>
 			</div>
-			<p>Add comment to changeset:</p>
-			<textarea></textarea>
+			<section class="changeset-viewer">
+				<iframe :src="achaviChangeset"></iframe>
+			</section>
+			<section class="comment">
+				<p>Add comment to changeset:</p>
+				<textarea></textarea>
+				<button @click="resolveChangeset">Resolve changeset</button>
+			</section>
 		</section>
-		<section class="changeset-viewer">
-		</section>
-		<section class="buttons">
-			<button @click="resolveChangeset">Resolve changeset</button>
-		</section>
+		
 	</div>
 </template>
 
 <style>
 	.comment-text {
 		white-space: pre;
+		text-wrap: wrap;
+	}
+	.changeset-viewer iframe {
+		width: 100%;
+		height: 600px;
 	}
 </style>
