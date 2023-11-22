@@ -98,7 +98,7 @@ def doCron(limit = 1000):
 		old_max_state = curs.fetchone()["max_state"]
 		with urllib.request.urlopen('https://planet.openstreetmap.org/replication/changesets/state.yaml') as f:
 			state_file = f.read().decode().split('\n')[2]
-			planet_current_state = int(re.search('(\d+)', state_file)[1])
+			planet_current_state = int(re.search(r'(\d+)', state_file)[1])
 			if (planet_current_state != old_max_state):
 				new_max_state = planet_current_state
 				if (old_max_state + limit < planet_current_state):
