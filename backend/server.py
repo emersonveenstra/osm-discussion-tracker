@@ -26,7 +26,7 @@ all_watched_cs_query = '''
 		on odt_changeset.csid = odt_comment.csid
 	where
 		odt_comment.uid = %s
-	order by odt_changeset.csid desc
+	order by odt_changeset.csid desc limit %s offset %s
 '''
 
 all_resolved_cs_query = '''
@@ -41,10 +41,10 @@ all_resolved_cs_query = '''
 
 '''
 
-def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
+def get_watched_changesets(uid: int, limit: int, offset: int) -> typing.List["Changeset"]:
 	all_changesets = []
 	with conn.cursor() as curs:
-		all_changeset_query = curs.execute(all_watched_cs_query, (uid,))
+		all_changeset_query = curs.execute(all_watched_cs_query, (uid,limit,offset))
 		all_watched_cs =  all_changeset_query.fetchall()
 		all_resolved_query = curs.execute(all_resolved_cs_query, (uid,))
 		all_resolved_cs =  []

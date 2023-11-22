@@ -12,8 +12,8 @@ import { computed } from 'vue'
 import { Changeset } from '@/classes/Changeset';
 
 const { result, loading, error, refetch, onResult } = useQuery(gql`
-query MyQuery($uid: Int!) {
-  watchedChangesets(uid: $uid) {
+query MyQuery($uid: Int!, $limit: Int!, $offset: Int!) {
+  watchedChangesets(uid: $uid, limit: $limit, offset: $offset) {
     csid
 	lastActivity
     ts
@@ -23,6 +23,8 @@ query MyQuery($uid: Int!) {
   }
 }`, {
     uid: userData.userID,
+    limit: 20,
+    offset: 0,
   })
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
@@ -44,25 +46,7 @@ onResult(queryResult => {
     <section class="changeset-list">
       <p>Your watched changesets</p>
       <template v-for="changeset in watched_changesets"  :key="changeset.csid">
-        <ChangesetCard v-if="changeset.hasResponse"
-        :changeset-id="changeset.csid"
-        :user-name="changeset.username"
-        :has-response="changeset.hasResponse"
-        :has-new-changesets="changeset.hasNewChangesets"
-        :last-activity="changeset.lastActivity"
-      />
-      </template>
-      <template v-for="changeset in watched_changesets"  :key="changeset.csid">
-        <ChangesetCard v-if="changeset.hasNewChangesets && !changeset.hasResponse"
-        :changeset-id="changeset.csid"
-        :user-name="changeset.username"
-        :has-response="changeset.hasResponse"
-        :has-new-changesets="changeset.hasNewChangesets"
-        :last-activity="changeset.lastActivity"
-      />
-      </template>
-      <template v-for="changeset in watched_changesets"  :key="changeset.csid">
-        <ChangesetCard v-if="!changeset.hasResponse && !changeset.hasNewChangesets"
+        <ChangesetCard
         :changeset-id="changeset.csid"
         :user-name="changeset.username"
         :has-response="changeset.hasResponse"
