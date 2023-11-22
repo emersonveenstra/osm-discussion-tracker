@@ -31,6 +31,11 @@ const { result, loading, error, refetch, onResult } = useQuery(gql`
 	}
 )
 
+if (window.location.hash !== '') {
+	console.log(window.location.hash)
+	changesetData.currentChangeset = parseInt(window.location.hash.slice(1), 10)
+}
+
 const watched_changesets = computed(() => result.value?.watchedChangesets)
 
 onResult(queryResult => {

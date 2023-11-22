@@ -11,6 +11,7 @@ defineProps<{
 
 function viewDetails(csid: number) {
 	changesetData.currentChangeset = csid
+	window.location.hash = `#${csid}`
 }
 </script>
 

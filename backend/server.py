@@ -100,7 +100,7 @@ def get_changeset_comments(csid: int) -> typing.List["Comment"]:
 			)
 	return all_comments
 
-def get_changeset_details(csid: int) -> "FullChangeset":
+def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 	all_comments = []
 	with conn.cursor() as curs:
 		all_comment_query = curs.execute('select * from odt_comment where csid = %s order by ts desc', (csid,))
@@ -117,13 +117,21 @@ def get_changeset_details(csid: int) -> "FullChangeset":
 		all_changeset_query = curs.execute('select * from odt_changeset where csid = %s', (csid,))
 		changeset = all_changeset_query.fetchone()
 		if changeset:
+			is_resolved = curs.execute('select * from odt_resolved where csid=%s and uid = %s', (csid, uid)).fetchone()
+			status = "Unresolved"
+			if is_resolved:
+				if is_resolved["expires_at"]:
+					status = f"Snoozed until {is_resolved['expires_at']}"
+				else:
+					status = "Resolved"
 			full_changeset = FullChangeset(
 				csid=changeset["csid"],
 				uid=changeset["uid"],
 				username = changeset["username"],
 				ts=changeset["ts"],
 				comment=changeset["comment"],
-				discussion=all_comments
+				discussion=all_comments,
+				status=status
 			)
 			return full_changeset
 
@@ -153,6 +161,7 @@ class FullChangeset:
 	ts: datetime
 	comment: str
 	discussion: typing.List["Comment"]
+	status: str
 
 @strawberry.type
 class Query:
