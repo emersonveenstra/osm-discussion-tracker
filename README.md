@@ -13,6 +13,7 @@ CREATE TABLE odt_changeset (
   ts timestamp without time zone not null,
   username text not null,
   comment text not null,
+  last_activity timestamp without time zone not null,
   UNIQUE(csid)
 );
 CREATE TABLE odt_comment (

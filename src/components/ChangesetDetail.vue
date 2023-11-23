@@ -96,10 +96,10 @@ async function updateChangeset(status_value: string) {
 			</section>
 			<section class="actions">
 				<h2>Status: {{ statusText }}</h2>
-				<label><input v-model="status" id="unresolve" value="unresolve" type="radio" :checked="changeset_details.status === 'Unresolved'">Unresolve</label>
-				<label><input v-model="status" id="resolve" value="resolve" type="radio" :checked="changeset_details.status === 'Resolved'">Resolve</label>
+				<label><input v-model="status" id="unresolve" value="unresolve" type="radio">Unresolve</label>
+				<label><input v-model="status" id="resolve" value="resolve" type="radio">Resolve</label>
 				<label><input v-model="status" id="snooze" value="snooze" type="radio">Snooze for <input id="daysToSnooze" type="number" value="7"> days</label>
-				<button @click="updateChangeset(status)">Update</button>
+				<button @click="updateChangeset(status)" :disabled="status === ''">Update</button>
 			</section>
 			<section class="changeset-viewer">
 				<iframe :src="achaviChangeset"></iframe>

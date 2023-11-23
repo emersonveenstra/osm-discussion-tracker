@@ -20,13 +20,15 @@ all_watched_cs_query = '''
 		odt_changeset.uid as uid,
 		odt_changeset.username as username,
 		odt_changeset.ts as ts,
-		odt_changeset.comment as comment
+		odt_changeset.comment as comment,
+		odt_changeset.last_activity as last_activity
 	from odt_changeset
 	left join odt_comment
 		on odt_changeset.csid = odt_comment.csid
 	where
-		odt_comment.uid = %s
-	order by odt_changeset.csid desc limit %s offset %s
+		odt_comment.uid = %s and
+		not odt_changeset.csid = ANY(%s)
+	order by odt_changeset.last_activity desc limit %s offset %s
 '''
 
 all_resolved_cs_query = '''
@@ -45,14 +47,15 @@ def get_watched_changesets(uid: int, limit: int, offset: int) -> typing.List["Ch
 	all_changesets = []
 	print(offset*20)
 	with conn.cursor() as curs:
-		all_changeset_query = curs.execute(all_watched_cs_query, (uid,limit,offset*20))
-		all_watched_cs =  all_changeset_query.fetchall()
 		all_resolved_query = curs.execute(all_resolved_cs_query, (uid,))
 		all_resolved_cs =  []
 		for resolved_cs in all_resolved_query.fetchall():
 			all_resolved_cs.append(resolved_cs["csid"])
+		all_changeset_query = curs.execute(all_watched_cs_query, (uid,all_resolved_cs,limit,offset*20))
+		all_watched_cs =  all_changeset_query.fetchall()
 		for changeset in all_watched_cs:
 			if changeset["csid"] in all_resolved_cs:
+				print(changeset["csid"])
 				continue
 			all_comments = curs.execute('select uid,ts from odt_comment where csid=%s order by ts asc', (changeset["csid"],)).fetchall()
 			owner_last_response = datetime.fromtimestamp(0)
@@ -75,7 +78,7 @@ def get_watched_changesets(uid: int, limit: int, offset: int) -> typing.List["Ch
 			all_changesets.append(
 				Changeset(
 					csid=changeset["csid"],
-					lastActivity=all_comments[0]["ts"],
+					lastActivity=changeset["last_activity"],
 					username = changeset["username"],
 					ts=changeset["ts"],
 					hasResponse=has_response,
@@ -139,7 +142,7 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 @strawberry.type
 class Changeset:
 	csid: int
-	lastActivity: datetime
+	lastActivity: datetime | None
 	username: str
 	ts: datetime
 	hasResponse: bool

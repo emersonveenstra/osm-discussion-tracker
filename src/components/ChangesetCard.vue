@@ -13,10 +13,11 @@ function viewDetails(csid: number) {
 	changesetData.currentChangeset = csid
 	window.location.hash = `#${csid}`
 }
+
 </script>
 
 <template>
-	<div class="changeset-card" :class="{ hasResponse: hasResponse, hasNewChangesets: hasNewChangesets }" @click="viewDetails(changesetId)">
+	<div class="changeset-card" :class="{ hasResponse: hasResponse, hasNewChangesets: hasNewChangesets, isCurrentChangeset: (changesetData.currentChangeset == changesetId) }" @click="viewDetails(changesetId)">
 		<span class="changeset-id">{{ changesetId }}</span>
 		<span class="changeset-creator">by {{ userName }}</span>
 		<span v-if="hasResponse">Needs Reply</span>
@@ -44,5 +45,9 @@ function viewDetails(csid: number) {
 
 	.hasResponse {
 		color: green;
+	}
+
+	.isCurrentChangeset {
+		background-color: gray;
 	}
 </style>

@@ -90,5 +90,6 @@ function loadNextPage(newOffset: number) {
 	.changeset-list {
 		height: 100%;
 		overflow: auto;
+		flex: 0 0 auto;
 	}
 </style>
