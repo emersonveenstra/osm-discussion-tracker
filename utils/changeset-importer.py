@@ -1,3 +1,4 @@
+from datetime import datetime
 import gzip
 from io import BytesIO
 import re
@@ -89,7 +90,7 @@ def doReplication(first_state, last_state, step=1):
 			if comment_id not in existing_comment_ids:
 					curs.execute("insert into odt_comment (comment_id, csid, uid, ts, username, comment) values (%s, %s, %s, %s, %s, %s)", (comment_id, data["csid"], data["comment_uid"], data["comment_ts"], data["comment_username"], data["comment_text"]))
 					cs_activity = curs.execute('select last_activity from odt_changeset where csid=%s', (data["csid"],)).fetchone()
-					if not cs_activity["last_activity"] or data["comment_ts"] > cs_activity["last_activity"]:
+					if not cs_activity["last_activity"] or datetime.utcfromtimestamp(datetime.fromisoformat(data["comment_ts"]).timestamp()) > cs_activity["last_activity"]:
 						curs.execute('update odt_changeset set last_activity=%s where csid=%s', (data["comment_ts"], data["csid"]))
 		conn.commit()
 		
