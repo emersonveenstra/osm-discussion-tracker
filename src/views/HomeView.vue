@@ -39,7 +39,6 @@ onResult(queryResult => {
 	if (queryResult.loading)
 		return;
 	for (const changeset of watched_changesets.value) {
-		console.log(changeset)
 		if (!changesetData.watchedChangesets.has(changeset.csid))
 			changesetData.watchedChangesets.set(changeset.csid, new Changeset(changeset.csid, changeset.username, changeset.ts, changeset.hasResponse, changeset.hasNewChangesets))
 	}
@@ -52,17 +51,23 @@ function loadNextPage(newOffset: number) {
 
 <template>
 	<main>
-		<section class="changeset-list" v-if="watched_changesets">
-			<p>Your watched changesets</p>
-			<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
-				<ChangesetCard
-				:changeset-id="changeset.csid"
-				:user-name="changeset.username"
-				:has-response="changeset.hasResponse"
-				:has-new-changesets="changeset.hasNewChangesets"
-				:last-activity="changeset.lastActivity"
-			/>
-			</template>
+		<section class="changeset-list">
+			<div class="header">
+				<p>Your watched changesets</p>
+				<span>{{ watched_changesets.length }} changesets <button @click="refetch()">Refresh list</button></span>
+			</div>
+
+			<div class="list" v-if="watched_changesets">
+				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
+					<ChangesetCard
+					:changeset-id="changeset.csid"
+					:user-name="changeset.username"
+					:has-response="changeset.hasResponse"
+					:has-new-changesets="changeset.hasNewChangesets"
+					:last-activity="changeset.lastActivity"
+				/>
+				</template>
+			</div>
 			<div class="pagination">
 				<button class="next" @click="loadNextPage(listOffset-20)" v-if="listOffset != 0">Prev</button>
 				<button class="next" @click="loadNextPage(listOffset+20)">Next</button>
