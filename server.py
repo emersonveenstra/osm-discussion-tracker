@@ -33,7 +33,7 @@ all_watched_cs_query = '''
 	where
 		odt_comment.uid = %s and
 		not odt_changeset.csid = ANY(%s)
-	order by odt_changeset.last_activity desc limit %s offset %s
+	order by odt_changeset.last_activity desc limit 200
 '''
 
 all_resolved_cs_query = '''
@@ -48,15 +48,14 @@ all_resolved_cs_query = '''
 
 '''
 
-def get_watched_changesets(uid: int, limit: int, offset: int) -> typing.List["Changeset"]:
+def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
 	all_changesets = []
-	print(offset*20)
 	with conn.cursor() as curs:
 		all_resolved_query = curs.execute(all_resolved_cs_query, (uid,))
 		all_resolved_cs =  []
 		for resolved_cs in all_resolved_query.fetchall():
 			all_resolved_cs.append(resolved_cs["csid"])
-		all_changeset_query = curs.execute(all_watched_cs_query, (uid,all_resolved_cs,limit,offset*20))
+		all_changeset_query = curs.execute(all_watched_cs_query, (uid,all_resolved_cs))
 		all_watched_cs =  all_changeset_query.fetchall()
 		for changeset in all_watched_cs:
 			if changeset["csid"] in all_resolved_cs:

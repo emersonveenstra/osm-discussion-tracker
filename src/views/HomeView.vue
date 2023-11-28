@@ -14,8 +14,8 @@ import { Changeset } from '@/classes/Changeset';
 const listOffset = ref(0)
 
 const { result, loading, error, refetch, onResult } = useQuery(gql`
-	query MyQuery($uid: Int!, $limit: Int!, $offset: Int!) {
-		watchedChangesets(uid: $uid, limit: $limit, offset: $offset) {
+	query MyQuery($uid: Int!) {
+		watchedChangesets(uid: $uid) {
 			csid
 			lastActivity
 			ts
@@ -25,21 +25,17 @@ const { result, loading, error, refetch, onResult } = useQuery(gql`
 		}
 	}`,
 	{
-		uid: userData.userID,
-		limit: 20,
-		offset: computed(() => listOffset.value),
+		uid: userData.userID
 	}
 )
 
 if (window.location.hash !== '') {
-	console.log(window.location.hash)
 	changesetData.currentChangeset = parseInt(window.location.hash.slice(1), 10)
 }
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
 
 onResult(queryResult => {
-	console.log(queryResult)
 	if (queryResult.loading)
 		return;
 	for (const changeset of watched_changesets.value) {
@@ -51,15 +47,14 @@ onResult(queryResult => {
 
 function loadNextPage(newOffset: number) {
 	listOffset.value = newOffset;
-	console.log(listOffset.value)
 }
 </script>
 
 <template>
 	<main>
-		<section class="changeset-list">
+		<section class="changeset-list" v-if="watched_changesets">
 			<p>Your watched changesets</p>
-			<template v-for="changeset in watched_changesets"  :key="changeset.csid">
+			<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
 				<ChangesetCard
 				:changeset-id="changeset.csid"
 				:user-name="changeset.username"
@@ -69,8 +64,8 @@ function loadNextPage(newOffset: number) {
 			/>
 			</template>
 			<div class="pagination">
-				<button class="next" @click="loadNextPage(listOffset-1)" v-if="listOffset != 0">Prev</button>
-				<button class="next" @click="loadNextPage(listOffset+1)">Next</button>
+				<button class="next" @click="loadNextPage(listOffset-20)" v-if="listOffset != 0">Prev</button>
+				<button class="next" @click="loadNextPage(listOffset+20)">Next</button>
 			</div>
 		</section>
 		<ChangesetDetail v-if="changesetData.currentChangeset !== 0" />
