@@ -179,12 +179,12 @@ async def resolve(resolve: Resolve, response: Response):
 	with conn.cursor() as curs:
 		is_existing = curs.execute('select * from odt_watched where uid=%s and csid=%s', (resolve.uid, resolve.csid)).fetchone()
 		if is_existing:
-			if resolve.snoozeUntil:
+			if resolve.status == 'snooze':
 				curs.execute('update odt_watched set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, resolve.csid))
 			else:
 				curs.execute('update odt_watched set resolved_at = %s where uid=%s and csid=%s', (resolved_at, resolve.uid, resolve.csid))
 		else:
-			if resolve.snoozeUntil:
+			if resolve.status == 'snooze':
 				curs.execute('insert into odt_watched (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolve.snoozeUntil))
 			else:
 				curs.execute('insert into odt_watched (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolved_at))
