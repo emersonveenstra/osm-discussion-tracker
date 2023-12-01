@@ -65,7 +65,7 @@ After=network.target
 [Service]
 Type=oneshot
 WorkingDirectory=/home/emerson/repos/osm-discussion-tracker
-ExecStart=/home/emerson/repos/osm-discussion-tracker/.venv/bin/python3 backend/changeset-importer.py -c 20 -b 20
+ExecStart=/home/emerson/repos/osm-discussion-tracker/.venv/bin/python3 backend/changeset_importer.py -c 20 -b 20
 
 [Install]
 WantedBy=multi-user.target

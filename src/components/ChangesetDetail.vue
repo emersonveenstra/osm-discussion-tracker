@@ -45,14 +45,14 @@ async function updateChangeset(status_value: string) {
 		uid: userData.userID,
 		csid: changesetData.currentChangeset,
 		status: 'resolve',
-		expiresAt: null
+		snoozeUntil: null
 	}
 	let url = `http://127.0.0.1:8000/${status_value}`;
 	if (status_value === 'snooze') {
 		const currentTime = new Date();
 		const daysToSnooze = parseInt(document.getElementById('daysToSnooze')?.value ?? '0', 10);
 		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
-		data.expiresAt = currentTime.toISOString();
+		data.snoozeUntil = currentTime.toISOString();
 		data.status = 'snooze'
 		url = "http://127.0.0.1:8000/resolve"
 	}

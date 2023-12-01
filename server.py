@@ -28,39 +28,21 @@ all_watched_cs_query = '''
 		odt_changeset.comment as comment,
 		odt_changeset.last_activity as last_activity
 	from odt_changeset
-	left join odt_comment
-		on odt_changeset.csid = odt_comment.csid
+	left join odt_watched
+		on odt_changeset.csid = odt_watched.csid
 	where
-		odt_comment.uid = %s and
-		not odt_changeset.csid = ANY(%s)
+		odt_watched.uid = %s and
+		odt_watched.resolved_at is null and
+		odt_watched.snooze_until is null
 	order by odt_changeset.last_activity desc limit 200
-'''
-
-all_resolved_cs_query = '''
-	select
-		odt_changeset.csid as csid,
-		odt_resolved.resolved_at as resolved_at
-	from odt_resolved
-	left join odt_changeset
-		on odt_changeset.csid = odt_resolved.csid
-	where
-		odt_resolved.uid = %s
-
 '''
 
 def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
 	all_changesets = []
 	with conn.cursor() as curs:
-		all_resolved_query = curs.execute(all_resolved_cs_query, (uid,))
-		all_resolved_cs =  []
-		for resolved_cs in all_resolved_query.fetchall():
-			all_resolved_cs.append(resolved_cs["csid"])
-		all_changeset_query = curs.execute(all_watched_cs_query, (uid,all_resolved_cs))
+		all_changeset_query = curs.execute(all_watched_cs_query, (uid,))
 		all_watched_cs =  all_changeset_query.fetchall()
 		for changeset in all_watched_cs:
-			if changeset["csid"] in all_resolved_cs:
-				print(changeset["csid"])
-				continue
 			all_comments = curs.execute('select uid,ts from odt_comment where csid=%s order by ts asc', (changeset["csid"],)).fetchall()
 			owner_last_response = datetime.fromtimestamp(0)
 			our_last_response = datetime.fromtimestamp(0)
@@ -124,12 +106,12 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 		all_changeset_query = curs.execute('select * from odt_changeset where csid = %s', (csid,))
 		changeset = all_changeset_query.fetchone()
 		if changeset:
-			is_resolved = curs.execute('select * from odt_resolved where csid=%s and uid = %s', (csid, uid)).fetchone()
+			is_resolved = curs.execute('select * from odt_watched where csid=%s and uid = %s', (csid, uid)).fetchone()
 			status = "Unresolved"
 			if is_resolved:
-				if is_resolved["expires_at"]:
-					status = f"Snoozed until {is_resolved['expires_at']}"
-				else:
+				if is_resolved["snooze_until"]:
+					status = f"Snoozed until {is_resolved['snooze_until']}"
+				elif is_resolved["resolved_at"]:
 					status = "Resolved"
 			full_changeset = FullChangeset(
 				csid=changeset["csid"],
@@ -195,14 +177,17 @@ async def resolve(resolve: Resolve, response: Response):
 		return response
 	resolved_at = datetime.utcnow()
 	with conn.cursor() as curs:
-		is_existing = curs.execute('select * from odt_resolved where uid=%s and csid=%s', (resolve.uid, resolve.csid)).fetchone()
+		is_existing = curs.execute('select * from odt_watched where uid=%s and csid=%s', (resolve.uid, resolve.csid)).fetchone()
 		if is_existing:
-			if resolve.expiresAt:
-				curs.execute('update odt_resolved set expires_at = %s where uid=%s and csid=%s', (resolve.expiresAt, resolve.uid, resolve.csid))
+			if resolve.snoozeUntil:
+				curs.execute('update odt_watched set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, resolve.csid))
 			else:
-				curs.execute('update odt_resolved set expires_at = null where uid=%s and csid=%s', (resolve.uid, resolve.csid))
+				curs.execute('update odt_watched set resolved_at = %s where uid=%s and csid=%s', (resolved_at, resolve.uid, resolve.csid))
 		else:
-			curs.execute('insert into odt_resolved (uid, csid, resolved_at, expires_at) values (%s,%s,%s,%s)', (resolve.uid, resolve.csid, resolved_at, resolve.expiresAt))
+			if resolve.snoozeUntil:
+				curs.execute('insert into odt_watched (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolve.snoozeUntil))
+			else:
+				curs.execute('insert into odt_watched (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolved_at))
 		conn.commit()
 	return {"message": resolve}
 
@@ -212,7 +197,7 @@ async def resolve(unresolve: Resolve, response: Response):
 		response.status_code = 400
 		return response
 	with conn.cursor() as curs:
-		curs.execute('delete from odt_resolved where uid=%s and csid=%s', (unresolve.uid, unresolve.csid))
+		curs.execute('delete from odt_watched where uid=%s and csid=%s', (unresolve.uid, unresolve.csid))
 		conn.commit()
 	return {"message": f"{unresolve.uid} has unresolved {unresolve.csid}"}
 
