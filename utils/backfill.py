@@ -1,3 +1,4 @@
+import sys
 import changeset_importer
 
 def doBackfill(number_to_backfill):
@@ -10,5 +11,11 @@ def doBackfill(number_to_backfill):
 		curs.execute('update odt_state set min_state = %s', (new_min_state,))
 		changeset_importer.conn.commit()	
 
-for i in range(500):
-	doBackfill(10)
+for i in range(10000):
+	print(f'loop {i}')
+	try:
+		doBackfill(10)
+	except KeyboardInterrupt:
+		sys.exit(1)
+	except:
+		continue
