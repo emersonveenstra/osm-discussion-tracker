@@ -27,7 +27,6 @@ def doReplication(first_state, last_state, step=1):
 		url = f'https://planet.openstreetmap.org/replication/changesets/{urlState}.osm.gz'
 		f = urllib.request.urlopen(url, timeout=10)
 		osmfile = gzip.open(BytesIO(f.read()))
-		print(f'importing {urlState}')
 		context = etree.iterparse(osmfile)
 		next(context)
 		for action, elem in context:
@@ -88,10 +87,27 @@ def doReplication(first_state, last_state, step=1):
 				curs.execute("insert into odt_changeset (csid, uid, ts, username, comment, last_activity) values (%s, %s, %s, %s, %s,%s)", (csid, data["uid"], data["ts"], data["username"], data["cs_comment"], data["ts"]))
 		for comment_id, data in comments.items():
 			if comment_id not in existing_comment_ids:
+					# Add comment data to comment table
 					curs.execute("insert into odt_comment (comment_id, csid, uid, ts, username, comment) values (%s, %s, %s, %s, %s, %s)", (comment_id, data["csid"], data["comment_uid"], data["comment_ts"], data["comment_username"], data["comment_text"]))
+					# Update changeset last_activity
 					cs_activity = curs.execute('select last_activity from odt_changeset where csid=%s', (data["csid"],)).fetchone()
 					if not cs_activity["last_activity"] or datetime.utcfromtimestamp(datetime.fromisoformat(data["comment_ts"]).timestamp()) > cs_activity["last_activity"]:
 						curs.execute('update odt_changeset set last_activity=%s where csid=%s', (data["comment_ts"], data["csid"]))
+					# Add changeset to comment author's watched list
+					check_watched_for_comment_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
+					if check_watched_for_comment_author:
+						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
+					else:
+						curs.execute('insert into odt_watched (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (data['comment_uid'], data['csid']))
+					og_changeset = changesets.get(data['csid'])
+					if not og_changeset:
+						print('Original changeset not found')
+						continue
+					check_watched_for_changeset_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (og_changeset['uid'], data['csid'])).fetchone()
+					if check_watched_for_changeset_author:
+						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (og_changeset['uid'], data['csid']))
+					else:
+						curs.execute('insert into odt_watched (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (og_changeset['uid'], data['csid']))
 		conn.commit()
 		
 	print(f'finished importing {len(changesets)} changesets and {len(comments)} comments')

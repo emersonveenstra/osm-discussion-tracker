@@ -31,11 +31,11 @@ CREATE TABLE odt_user (
   isActive bool not null,
   UNIQUE(uid)
 );
-CREATE TABLE odt_resolved (
+CREATE TABLE odt_watched (
   uid bigint not null,
   csid bigint not null,
-  resolved_at timestamp without time zone not null,
-  expires_at timestamp without time zone
+  resolved_at timestamp without time zone,
+  snooze_until timestamp without time zone
 );
 CREATE TABLE odt_state (
   min_state bigint default 0,
