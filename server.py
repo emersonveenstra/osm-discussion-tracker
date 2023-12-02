@@ -109,7 +109,7 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 		changeset = all_changeset_query.fetchone()
 		if changeset:
 			is_resolved = curs.execute('select * from odt_watched where csid=%s and uid = %s', (csid, uid)).fetchone()
-			status = "Unresolved"
+			status = "Watching"
 			if is_resolved:
 				if is_resolved["snooze_until"]:
 					status = f"Snoozed until {is_resolved['snooze_until']}"
@@ -188,7 +188,7 @@ async def resolve(resolve: Resolve, response: Response):
 			if resolve.status == 'snooze':
 				curs.execute('update odt_watched set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, resolve.csid))
 			else:
-				curs.execute('update odt_watched set resolved_at = %s where uid=%s and csid=%s', (resolved_at, resolve.uid, resolve.csid))
+				curs.execute('update odt_watched set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (resolved_at, resolve.uid, resolve.csid))
 		else:
 			if resolve.status == 'snooze':
 				curs.execute('insert into odt_watched (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolve.snoozeUntil))
@@ -203,7 +203,7 @@ async def resolve(unresolve: Resolve, response: Response):
 		response.status_code = 400
 		return response
 	with conn.cursor() as curs:
-		curs.execute('delete from odt_watched where uid=%s and csid=%s', (unresolve.uid, unresolve.csid))
+		curs.execute('update odt_watched set snooze_until = null, resolved_at = null where uid=%s and csid=%s', (unresolve.uid, unresolve.csid))
 		conn.commit()
 	return {"message": f"{unresolve.uid} has unresolved {unresolve.csid}"}
 

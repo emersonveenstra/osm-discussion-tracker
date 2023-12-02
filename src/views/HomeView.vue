@@ -37,6 +37,10 @@ if (window.location.hash !== '') {
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
 
+const showWatchedCS = ref(true)
+const showSnoozedCS = ref(false)
+const showResolvedCS = ref(false)
+
 onResult(queryResult => {
 	if (queryResult.loading)
 		return;
@@ -54,14 +58,22 @@ function loadNextPage(newOffset: number) {
 <template>
 	<main>
 		<section class="changeset-list">
-			<div class="header">
+			<div class="header" v-if="watched_changesets">
 				<p>Your watched changesets</p>
 				<span>{{ watched_changesets.length }} changesets <button @click="refetch()">Refresh list</button></span>
+				<div class="filter-wrapper">
+					<button>Filter</button>
+					<div class="filter-options">
+						<label>Watched<input type="checkbox" name="watched" v-model="showWatchedCS" checked></label>
+						<label>Snoozed<input type="checkbox" name="snoozed" v-model="showSnoozedCS"></label>
+						<label>Resolved<input type="checkbox" name="resolved" v-model="showResolvedCS"></label>
+					</div>
+				</div>
 			</div>
 
 			<div class="list" v-if="watched_changesets">
 				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
-					<ChangesetCard
+					<ChangesetCard v-if="(changeset.status === 'watching' && showWatchedCS) || (changeset.status === 'snoozed' && showSnoozedCS) || (changeset.status === 'resolved' && showResolvedCS)"
 					:changeset-id="changeset.csid"
 					:changeset-comment="changeset.comment"
 					:user-name="changeset.username"
@@ -72,9 +84,9 @@ function loadNextPage(newOffset: number) {
 				/>
 				</template>
 			</div>
-			<div class="pagination">
-				<button class="next" @click="loadNextPage(listOffset-20)" v-if="listOffset != 0">Prev</button>
-				<button class="next" @click="loadNextPage(listOffset+20)">Next</button>
+			<div class="pagination" v-if="watched_changesets">
+				<button class="prev" @click="loadNextPage(listOffset-20)" v-if="listOffset != 0">Prev</button>
+				<button class="next" @click="loadNextPage(listOffset+20)" v-if="(listOffset+20) < watched_changesets.length">Next</button>
 			</div>
 		</section>
 		<ChangesetDetail v-if="changesetData.currentChangeset !== 0" />
@@ -90,6 +102,8 @@ function loadNextPage(newOffset: number) {
 
 	.changeset-detail {
 		flex: 1 1 100%;
+		height: 100%;
+		overflow: auto;
 	}
 	.changeset-list {
 		height: 100%;

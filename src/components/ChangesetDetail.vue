@@ -29,7 +29,7 @@ query MyQuery($csid: Int!, $uid: Int!) {
 
 const changeset_details = computed(() => result.value?.getChangesetDetails ?? false)
 
-const status = ref('');
+const status = ref(changeset_details.value.status);
 const statusText = computed(() => result.value?.getChangesetDetails.status ?? false)
 
 const achaviChangeset = computed(() => {
@@ -84,6 +84,7 @@ async function updateChangeset(status_value: string) {
 			<a :href="`https://osmcha.org/changesets/${changesetData.currentChangeset}`">OSMCha</a>
 		</div>
 		<span>by {{ changeset_details.username }} on {{ changeset_details.ts }}Z</span>
+		<p>{{ changeset_details.comment }}</p>
 		<section class="discussion"> 
 			<h2>Discussion</h2>
 			<div class="comment-wrap" v-for="comment in changeset_details['discussion']" :key="comment['ts']">
@@ -96,9 +97,12 @@ async function updateChangeset(status_value: string) {
 			</section>
 			<section class="actions">
 				<h2>Status: {{ statusText }}</h2>
-				<label><input v-model="status" id="unresolve" value="unresolve" type="radio">Unresolve</label>
-				<label><input v-model="status" id="resolve" value="resolve" type="radio">Resolve</label>
-				<label><input v-model="status" id="snooze" value="snooze" type="radio">Snooze for <input id="daysToSnooze" type="number" value="7"> days</label>
+				<select v-model="status">
+					<option value="unresolve">Watch</option>
+					<option value="resolve">Resolve</option>
+					<option value="snooze">Snooze</option>
+				</select>
+				<span v-if="status == 'snooze'">for <input id="daysToSnooze" type="number" value="3"> days</span>
 				<button @click="updateChangeset(status)" :disabled="status === ''">Update</button>
 			</section>
 			<section class="changeset-viewer">
