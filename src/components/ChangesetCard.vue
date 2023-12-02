@@ -7,6 +7,8 @@ defineProps<{
 	hasResponse: boolean,
 	lastActivity: string,
 	hasNewChangesets: boolean,
+	changesetComment: string,
+	status: string
 }>()
 
 function viewDetails(csid: number) {
@@ -17,25 +19,50 @@ function viewDetails(csid: number) {
 </script>
 
 <template>
-	<div class="changeset-card" :class="{ hasResponse: hasResponse, hasNewChangesets: hasNewChangesets, isCurrentChangeset: (changesetData.currentChangeset == changesetId) }" @click="viewDetails(changesetId)">
-		<span class="changeset-id">{{ changesetId }}</span>
-		<span class="changeset-creator">by {{ userName }}</span>
-		<span v-if="hasResponse">Needs Reply</span>
-		<span v-else-if="hasNewChangesets">Needs Escalation</span>
+	<div class="changeset-card" :class="{ hasResponse: (hasResponse && status == 'watching'), hasNewChangesets: (hasNewChangesets && status == 'watching'), isCurrentChangeset: (changesetData.currentChangeset == changesetId) }">
+		<span class="check">
+			<input type="checkbox">
+		</span>
+		<span class="info" @click="viewDetails(changesetId)">
+			<span class="changeset-creator">{{ userName }}</span>
+			<span class="changeset-comment">{{ changesetComment }}</span>
+			<span class="changeset-id">{{ changesetId }}</span>
+		</span>
+		<span class="icon">
+			<font-awesome-icon v-if="status == 'resolved'" :icon="['far', 'square-check']" />
+			<font-awesome-icon v-else-if="status === 'snoozed'" :icon="['far', 'hourglass-half']" />
+			<font-awesome-icon v-else-if="hasResponse" :icon="['fas', 'envelope']" />
+			<font-awesome-icon v-else-if="hasNewChangesets" :icon="['fas', 'triangle-exclamation']" />
+			<font-awesome-icon v-else :icon="['far', 'bell']" />
+		</span>
 	</div>
 </template>
 
 <style scoped>
-	div {
+	.changeset-card {
 		border-bottom: 1px solid black;
-		padding: 10px;
 		cursor: pointer;
+		display: flex;
+		flex-flow: row nowrap;
+		align-items: center;
 	}
-	div span {
+	.changeset-card span {
+		font-size: 12px;
 		display: block;
-		font-size: 14px;
+		padding-bottom: 4px;
 	}
-	.changeset-id {
+	.check {
+		padding: 0 8px;
+		flex: 0 0 auto;
+	}
+	.info {
+		flex: 1 1 100%;
+	}
+
+	.icon {
+		padding: 0 8px;
+	}
+	.changeset-creator {
 		font-weight: bold;
 	}
 

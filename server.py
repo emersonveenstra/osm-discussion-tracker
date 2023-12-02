@@ -26,15 +26,15 @@ all_watched_cs_query = '''
 		odt_changeset.username as username,
 		odt_changeset.ts as ts,
 		odt_changeset.comment as comment,
-		odt_changeset.last_activity as last_activity
+		odt_changeset.last_activity as last_activity,
+		odt_watched.resolved_at as resolved_at,
+		odt_watched.snooze_until as snooze_until
 	from odt_changeset
 	left join odt_watched
 		on odt_changeset.csid = odt_watched.csid
 	where
-		odt_watched.uid = %s and
-		odt_watched.resolved_at is null and
-		odt_watched.snooze_until is null
-	order by odt_changeset.last_activity desc limit 200
+		odt_watched.uid = %s
+	order by odt_changeset.last_activity desc
 '''
 
 def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
@@ -43,32 +43,34 @@ def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
 		all_changeset_query = curs.execute(all_watched_cs_query, (uid,))
 		all_watched_cs =  all_changeset_query.fetchall()
 		for changeset in all_watched_cs:
-			all_comments = curs.execute('select uid,ts from odt_comment where csid=%s order by ts asc', (changeset["csid"],)).fetchall()
-			owner_last_response = datetime.fromtimestamp(0)
-			our_last_response = datetime.fromtimestamp(0)
-			for comment in all_comments:
-				if comment["uid"] == changeset["uid"]:
-					owner_last_response = comment["ts"]
-				if comment["uid"] == uid:
-					our_last_response = comment["ts"]
-			if owner_last_response > our_last_response:
+			last_comment = curs.execute('select uid,ts from odt_comment where csid=%s order by ts desc limit 1', (changeset["csid"],)).fetchone()
+			if last_comment["uid"] != uid:
 				has_response = True
 			else:
 				has_response = False
-			user_last_changeset = curs.execute('select csid, ts from odt_changeset where uid=%s order by ts desc', (changeset["uid"],)).fetchone()
-			if user_last_changeset["ts"] > our_last_response:
+			user_last_changeset = curs.execute('select csid, ts from odt_changeset where uid=%s order by ts desc limit 1', (changeset["uid"],)).fetchone()
+			if user_last_changeset["ts"] > last_comment["ts"]:
 				has_new_changesets = True
 			else:
 				has_new_changesets = False
+
+			if changeset["resolved_at"]:
+				status = "resolved"
+			elif changeset["snooze_until"]:
+				status = "snoozed"
+			else:
+				status = "watching"
 
 			all_changesets.append(
 				Changeset(
 					csid=changeset["csid"],
 					lastActivity=changeset["last_activity"],
 					username = changeset["username"],
+					comment=changeset["comment"],
 					ts=changeset["ts"],
 					hasResponse=has_response,
-					hasNewChangesets=has_new_changesets
+					hasNewChangesets=has_new_changesets,
+					status=status
 				)
 			)
 	return all_changesets
@@ -130,9 +132,11 @@ class Changeset:
 	csid: int
 	lastActivity: datetime | None
 	username: str
+	comment: str
 	ts: datetime
 	hasResponse: bool
 	hasNewChangesets: bool
+	status: str
 
 @strawberry.type
 class Comment:
@@ -168,10 +172,12 @@ class Resolve(BaseModel):
 	uid: int = 0
 	csid: int = 0
 	status: str
-	expiresAt: object | None = None
+	expiresAt: str | None = None
+	snoozeUntil: str | None = None
 
 @app.post("/resolve", status_code=200)
 async def resolve(resolve: Resolve, response: Response):
+	print(resolve)
 	if (resolve.uid == 0 or resolve.csid == 0):
 		response.status_code = 400
 		return response

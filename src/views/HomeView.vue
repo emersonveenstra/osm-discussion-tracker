@@ -19,9 +19,11 @@ const { result, loading, error, refetch, onResult } = useQuery(gql`
 			csid
 			lastActivity
 			ts
+			comment
 			hasResponse
 			hasNewChangesets
 			username
+			status
 		}
 	}`,
 	{
@@ -61,10 +63,12 @@ function loadNextPage(newOffset: number) {
 				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
 					<ChangesetCard
 					:changeset-id="changeset.csid"
+					:changeset-comment="changeset.comment"
 					:user-name="changeset.username"
 					:has-response="changeset.hasResponse"
 					:has-new-changesets="changeset.hasNewChangesets"
 					:last-activity="changeset.lastActivity"
+					:status="changeset.status"
 				/>
 				</template>
 			</div>
@@ -91,5 +95,6 @@ function loadNextPage(newOffset: number) {
 		height: 100%;
 		overflow: auto;
 		flex: 0 0 auto;
+		width: 300px;
 	}
 </style>
