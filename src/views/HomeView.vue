@@ -12,10 +12,15 @@ import { computed, ref } from 'vue'
 import { Changeset } from '@/classes/Changeset';
 
 const listOffset = ref(0)
+const csFilter = ref('w')
+
+const showWatchedCS = ref(true)
+const showSnoozedCS = ref(false)
+const showResolvedCS = ref(false)
 
 const { result, loading, error, refetch, onResult } = useQuery(gql`
-	query MyQuery($uid: Int!) {
-		watchedChangesets(uid: $uid) {
+	query MyQuery($uid: Int!, $showWatched: Boolean!, $showSnoozed: Boolean!, $showResolved: Boolean!) {
+		watchedChangesets(uid: $uid, showWatched: $showWatched, showSnoozed: $showSnoozed, showResolved: $showResolved) {
 			csid
 			lastActivity
 			ts
@@ -27,7 +32,10 @@ const { result, loading, error, refetch, onResult } = useQuery(gql`
 		}
 	}`,
 	{
-		uid: userData.userID
+		uid: userData.userID,
+		showWatched: showWatchedCS,
+		showSnoozed: showSnoozedCS,
+		showResolved: showResolvedCS
 	}
 )
 
@@ -36,10 +44,6 @@ if (window.location.hash !== '') {
 }
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
-
-const showWatchedCS = ref(true)
-const showSnoozedCS = ref(false)
-const showResolvedCS = ref(false)
 
 onResult(queryResult => {
 	if (queryResult.loading)
@@ -73,7 +77,7 @@ function loadNextPage(newOffset: number) {
 
 			<div class="list" v-if="watched_changesets">
 				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
-					<ChangesetCard v-if="(changeset.status === 'watching' && showWatchedCS) || (changeset.status === 'snoozed' && showSnoozedCS) || (changeset.status === 'resolved' && showResolvedCS)"
+					<ChangesetCard
 					:changeset-id="changeset.csid"
 					:changeset-comment="changeset.comment"
 					:user-name="changeset.username"

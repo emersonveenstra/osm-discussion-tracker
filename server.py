@@ -34,13 +34,34 @@ all_watched_cs_query = '''
 		on odt_changeset.csid = odt_watched.csid
 	where
 		odt_watched.uid = %s
+		{}
 	order by odt_changeset.last_activity desc
 '''
 
-def get_watched_changesets(uid: int) -> typing.List["Changeset"]:
+def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showResolved: bool) -> typing.List["Changeset"]:
 	all_changesets = []
+	print(showWatched, showSnoozed, showResolved)
 	with conn.cursor() as curs:
-		all_changeset_query = curs.execute(all_watched_cs_query, (uid,))
+		query_filter = ''
+		if showWatched:
+			if not showSnoozed:
+				if not showResolved:
+					query_filter = 'and odt_watched.snooze_until is null and odt_watched.resolved_at is null'
+				else:
+					query_filter = 'and odt_watched.snooze_until is null'
+			elif not showResolved:
+				query_filter = 'and odt_watched.resolved_at is null'
+			else:
+				query_filter = ''
+		elif showSnoozed:
+			if not showResolved:
+				query_filter = 'and odt_watched.snooze_until is not null and odt_watched.resolved_at is null'
+			else:
+				query_filter = 'and odt_watched.snooze_until is not null or odt_watched.resolved_at is not null'
+		elif showResolved:
+			query_filter = 'and odt_watched.resolved_at is not null'
+
+		all_changeset_query = curs.execute(all_watched_cs_query.format(query_filter), (uid,))
 		all_watched_cs =  all_changeset_query.fetchall()
 		for changeset in all_watched_cs:
 			last_comment = curs.execute('select uid,ts from odt_comment where csid=%s order by ts desc limit 1', (changeset["csid"],)).fetchone()
