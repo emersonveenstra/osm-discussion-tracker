@@ -10,9 +10,11 @@ import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { computed, ref } from 'vue'
 import { Changeset } from '@/classes/Changeset';
+import { useCheckedCardsStore } from '@/stores/checkedCards';
+const checkedCards = useCheckedCardsStore();
 
 const listOffset = ref(0)
-const csFilter = ref('w')
+const status = ref('')
 
 const showWatchedCS = ref(true)
 const showSnoozedCS = ref(false)
@@ -57,6 +59,41 @@ onResult(queryResult => {
 function loadNextPage(newOffset: number) {
 	listOffset.value = newOffset;
 }
+
+async function updateChangesets(status_value: string) {
+	const data = {
+		uid: userData.userID,
+		csid: [...checkedCards.currentCheckedCards],
+		status: 'resolve',
+		snoozeUntil: null
+	}
+	let url = `http://127.0.0.1:8000/${status_value}`;
+	if (status_value === 'snooze') {
+		const currentTime = new Date();
+		const daysToSnooze = parseInt(document.getElementById('daysToSnooze')?.value ?? '0', 10);
+		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
+		data.snoozeUntil = currentTime.toISOString();
+		data.status = 'snooze'
+		url = "http://127.0.0.1:8000/resolve"
+	}
+	console.log(data)
+	try {
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		});
+
+		const result = await response.json();
+		console.log("Success:", result);
+		refetch()
+		checkedCards.currentCheckedCards = []
+	} catch (error) {
+		console.error("Error:", error);
+	}
+}
 </script>
 
 <template>
@@ -72,6 +109,15 @@ function loadNextPage(newOffset: number) {
 						<label>Snoozed<input type="checkbox" name="snoozed" v-model="showSnoozedCS"></label>
 						<label>Resolved<input type="checkbox" name="resolved" v-model="showResolvedCS"></label>
 					</div>
+				</div>
+				<div class="mass-update" v-if="checkedCards.currentCheckedCards.length > 0">
+					<select v-model="status">
+					<option value="unresolve">Watch</option>
+					<option value="resolve">Resolve</option>
+					<option value="snooze">Snooze</option>
+					</select>
+					<span v-if="status == 'snooze'">for <input id="daysToSnooze" type="number" value="3"> days</span>
+					<button @click="updateChangesets(status)" :disabled="status === ''">Update</button>
 				</div>
 			</div>
 

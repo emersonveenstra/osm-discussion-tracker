@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useChangesetStore } from '@/stores/changesets';
 const changesetData = useChangesetStore();
+import { useCheckedCardsStore } from '@/stores/checkedCards';
+const checkedCards = useCheckedCardsStore();
 defineProps<{
 	changesetId: number,
 	userName: string,
@@ -21,7 +23,7 @@ function viewDetails(csid: number) {
 <template>
 	<div class="changeset-card" :class="{ hasResponse: (hasResponse && status == 'watching'), hasNewChangesets: (hasNewChangesets && status == 'watching'), isCurrentChangeset: (changesetData.currentChangeset == changesetId) }">
 		<span class="check">
-			<input type="checkbox">
+			<input type="checkbox" :value="changesetId" v-model="checkedCards.currentCheckedCards">
 		</span>
 		<span class="info" @click="viewDetails(changesetId)">
 			<span class="changeset-creator">{{ userName }}</span>

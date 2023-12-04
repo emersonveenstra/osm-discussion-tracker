@@ -43,7 +43,7 @@ function commentChangeset() {
 async function updateChangeset(status_value: string) {
 	const data = {
 		uid: userData.userID,
-		csid: changesetData.currentChangeset,
+		csid: [changesetData.currentChangeset],
 		status: 'resolve',
 		snoozeUntil: null
 	}

@@ -190,8 +190,8 @@ graphql_app = GraphQLRouter(schema)
 app = FastAPI()
 
 class Resolve(BaseModel):
-	uid: int = 0
-	csid: int = 0
+	uid: int
+	csid: list[int] = []
 	status: str
 	expiresAt: str | None = None
 	snoozeUntil: str | None = None
@@ -199,33 +199,29 @@ class Resolve(BaseModel):
 @app.post("/resolve", status_code=200)
 async def resolve(resolve: Resolve, response: Response):
 	print(resolve)
-	if (resolve.uid == 0 or resolve.csid == 0):
-		response.status_code = 400
-		return response
 	resolved_at = datetime.utcnow()
-	with conn.cursor() as curs:
-		is_existing = curs.execute('select * from odt_watched where uid=%s and csid=%s', (resolve.uid, resolve.csid)).fetchone()
-		if is_existing:
-			if resolve.status == 'snooze':
-				curs.execute('update odt_watched set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, resolve.csid))
+	for csid in resolve.csid:
+		with conn.cursor() as curs:
+			is_existing = curs.execute('select * from odt_watched where uid=%s and csid=%s', (resolve.uid, csid)).fetchone()
+			if is_existing:
+				if resolve.status == 'snooze':
+					curs.execute('update odt_watched set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, csid))
+				else:
+					curs.execute('update odt_watched set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (resolved_at, resolve.uid, csid))
 			else:
-				curs.execute('update odt_watched set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (resolved_at, resolve.uid, resolve.csid))
-		else:
-			if resolve.status == 'snooze':
-				curs.execute('insert into odt_watched (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolve.snoozeUntil))
-			else:
-				curs.execute('insert into odt_watched (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, resolve.csid, resolved_at))
-		conn.commit()
+				if resolve.status == 'snooze':
+					curs.execute('insert into odt_watched (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, csid, resolve.snoozeUntil))
+				else:
+					curs.execute('insert into odt_watched (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, csid, resolved_at))
+			conn.commit()
 	return {"message": resolve}
 
 @app.post("/unresolve", status_code=200)
 async def resolve(unresolve: Resolve, response: Response):
-	if (unresolve.uid == 0 or unresolve.csid == 0):
-		response.status_code = 400
-		return response
-	with conn.cursor() as curs:
-		curs.execute('update odt_watched set snooze_until = null, resolved_at = null where uid=%s and csid=%s', (unresolve.uid, unresolve.csid))
-		conn.commit()
+	for csid in unresolve.csid:
+		with conn.cursor() as curs:
+			curs.execute('update odt_watched set snooze_until = null, resolved_at = null where uid=%s and csid=%s', (unresolve.uid, csid))
+			conn.commit()
 	return {"message": f"{unresolve.uid} has unresolved {unresolve.csid}"}
 
 app.include_router(graphql_app, prefix="/graphql")
