@@ -99,9 +99,9 @@ async function updateChangesets(status_value: string) {
 <template>
 	<main>
 		<section class="changeset-list">
-			<div class="header" v-if="watched_changesets">
+			<div class="header" v-if="watched_changesets || loading">
 				<p>Your watched changesets</p>
-				<span>{{ watched_changesets.length }} changesets <button @click="refetch()">Refresh list</button></span>
+				<span><button @click="refetch()">Refresh list</button></span>
 				<div class="filter-wrapper">
 					<button>Filter</button>
 					<div class="filter-options">
@@ -110,6 +110,7 @@ async function updateChangesets(status_value: string) {
 						<label>Resolved<input type="checkbox" name="resolved" v-model="showResolvedCS"></label>
 					</div>
 				</div>
+				<span v-if="watched_changesets && !loading">{{ watched_changesets.length }} changesets</span>
 				<div class="mass-update" v-if="checkedCards.currentCheckedCards.length > 0">
 					<select v-model="status">
 					<option value="unresolve">Watch</option>
@@ -121,7 +122,10 @@ async function updateChangesets(status_value: string) {
 				</div>
 			</div>
 
-			<div class="list" v-if="watched_changesets">
+			<div class="loading" v-if="loading">
+				<p>Loading changesets...</p>
+			</div>
+			<div class="list" v-if="watched_changesets && !loading">
 				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
 					<ChangesetCard
 					:changeset-id="changeset.csid"
@@ -136,6 +140,9 @@ async function updateChangesets(status_value: string) {
 			</div>
 			<div class="pagination" v-if="watched_changesets">
 				<button class="prev" @click="loadNextPage(listOffset-20)" v-if="listOffset != 0">Prev</button>
+				<template v-for="num in Math.ceil(watched_changesets.length / 20)" :key="num">
+					<button @click="loadNextPage((num-1)*20)" class="page">{{ num }}</button>
+				</template>
 				<button class="next" @click="loadNextPage(listOffset+20)" v-if="(listOffset+20) < watched_changesets.length">Next</button>
 			</div>
 		</section>
@@ -160,5 +167,22 @@ async function updateChangesets(status_value: string) {
 		overflow: auto;
 		flex: 0 0 auto;
 		width: 300px;
+		display: flex;
+		flex-flow: column;
+	}
+
+	.changeset-list .header {
+		flex: 0 0 auto;
+	}
+
+	.changeset-list .list, .changeset-list .loading {
+		flex: 1 1 100%;
+		overflow: auto;
+	}
+
+	.changeset-list .loading {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 </style>

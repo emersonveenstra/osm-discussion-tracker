@@ -35,12 +35,11 @@ all_watched_cs_query = '''
 	where
 		odt_watched.uid = %s
 		{}
-	order by odt_changeset.last_activity desc
+	order by odt_changeset.last_activity desc limit 200
 '''
 
 def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showResolved: bool) -> typing.List["Changeset"]:
 	all_changesets = []
-	print(showWatched, showSnoozed, showResolved)
 	with conn.cursor() as curs:
 		query_filter = ''
 		if showWatched:
