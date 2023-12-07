@@ -20,7 +20,7 @@ const showWatchedCS = ref(true)
 const showSnoozedCS = ref(false)
 const showResolvedCS = ref(false)
 
-const { result, loading, error, refetch, onResult } = useQuery(gql`
+const { result, loading, refetch, onResult } = useQuery(gql`
 	query MyQuery($uid: Int!, $showWatched: Boolean!, $showSnoozed: Boolean!, $showResolved: Boolean!) {
 		watchedChangesets(uid: $uid, showWatched: $showWatched, showSnoozed: $showSnoozed, showResolved: $showResolved) {
 			csid
@@ -65,11 +65,12 @@ async function updateChangesets(status_value: string) {
 		uid: userData.userID,
 		csid: [...checkedCards.currentCheckedCards],
 		status: 'resolve',
-		snoozeUntil: null
+		snoozeUntil: ''
 	}
 	let url = `http://127.0.0.1:8000/${status_value}`;
 	if (status_value === 'snooze') {
 		const currentTime = new Date();
+		// @ts-ignore
 		const daysToSnooze = parseInt(document.getElementById('daysToSnooze')?.value ?? '0', 10);
 		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
