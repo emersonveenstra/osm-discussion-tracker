@@ -93,16 +93,24 @@ def doReplication(first_state, last_state, step=1):
 					cs_activity = curs.execute('select last_activity from odt_changeset where csid=%s', (data["csid"],)).fetchone()
 					if not cs_activity["last_activity"] or datetime.utcfromtimestamp(datetime.fromisoformat(data["comment_ts"]).timestamp()) > cs_activity["last_activity"]:
 						curs.execute('update odt_changeset set last_activity=%s where csid=%s', (data["comment_ts"], data["csid"]))
-					# Add changeset to comment author's watched list
-					check_watched_for_comment_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
-					if check_watched_for_comment_author:
-						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
-					else:
-						curs.execute('insert into odt_watched (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (data['comment_uid'], data['csid']))
+
 					og_changeset = changesets.get(data['csid'])
 					if not og_changeset:
 						print('Original changeset not found')
 						continue
+
+					# Get all users watching the changeset
+					all_watching_users = curs.execute('select * from odt_watched where csid=%s', (data["csid"],))
+					for user in all_watching_users.fetchall():
+						if user["uid"] != int(data["comment_uid"]):
+							curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
+
+					# Add changeset to comment author's watched list
+					check_watched_for_comment_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
+					if check_watched_for_comment_author and og_changeset["uid"] != data["comment_uid"]:
+						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
+					else:
+						curs.execute('insert into odt_watched (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (data['comment_uid'], data['csid']))
 					check_watched_for_changeset_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (og_changeset['uid'], data['csid'])).fetchone()
 					if check_watched_for_changeset_author:
 						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (og_changeset['uid'], data['csid']))
