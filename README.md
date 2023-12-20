@@ -25,11 +25,29 @@ CREATE TABLE odt_comment (
   comment text not null,
   UNIQUE(comment_id)
 );
+CREATE TABLE odt_changeset_note (
+  uid bigint not null,
+  csid bigint not null,
+  ts timestamp without time zone,
+  note text
+);
+CREATE TABLE odt_changeset_flag (
+  uid bigint not null,
+  csid bigint not null,
+  flag text
+);
 CREATE TABLE odt_user (
   uid bigint not null,
   username text not null,
   isActive bool not null,
+  isAdmin bool,
   UNIQUE(uid)
+);
+CREATE TABLE odt_user_note (
+  note_uid bigint not null,
+  user_uid bigint not null,
+  ts timestamp without time zone,
+  note text
 );
 CREATE TABLE odt_watched (
   uid bigint not null,
