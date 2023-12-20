@@ -9,8 +9,7 @@ import { createPinia } from 'pinia'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faBell, faSquareCheck, faHourglassHalf } from '@fortawesome/free-regular-svg-icons'
-import { faTriangleExclamation, faEnvelope } from '@fortawesome/free-solid-svg-icons'
-library.add(faBell, faTriangleExclamation, faEnvelope, faSquareCheck, faHourglassHalf)
+library.add(faBell, faSquareCheck, faHourglassHalf)
 
 import App from './App.vue'
 import router from './router'

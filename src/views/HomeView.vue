@@ -29,7 +29,6 @@ const { result, loading, refetch, onResult } = useQuery(gql`
 			ts
 			comment
 			hasResponse
-			hasNewChangesets
 			username
 			status
 		}
@@ -134,7 +133,6 @@ async function updateChangesets(status_value: string) {
 					:changeset-comment="changeset.comment"
 					:user-name="changeset.username"
 					:has-response="changeset.hasResponse"
-					:has-new-changesets="changeset.hasNewChangesets"
 					:last-activity="changeset.lastActivity"
 					:status="changeset.status"
 				/>

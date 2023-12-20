@@ -35,7 +35,7 @@ all_watched_cs_query = '''
 	where
 		odt_watched.uid = %s
 		{}
-	order by odt_changeset.last_activity desc limit 200
+	order by odt_changeset.last_activity desc
 '''
 
 def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showResolved: bool) -> typing.List["Changeset"]:
@@ -68,11 +68,6 @@ def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showR
 				has_response = True
 			else:
 				has_response = False
-			user_last_changeset = curs.execute('select csid, ts from odt_changeset where uid=%s order by ts desc limit 1', (changeset["uid"],)).fetchone()
-			if last_comment and user_last_changeset["ts"] > last_comment["ts"]:
-				has_new_changesets = True
-			else:
-				has_new_changesets = False
 
 			if changeset["resolved_at"]:
 				status = "resolved"
@@ -89,7 +84,6 @@ def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showR
 					comment=changeset["comment"],
 					ts=changeset["ts"],
 					hasResponse=has_response,
-					hasNewChangesets=has_new_changesets,
 					status=status
 				)
 			)
@@ -155,7 +149,6 @@ class Changeset:
 	comment: str
 	ts: datetime
 	hasResponse: bool
-	hasNewChangesets: bool
 	status: str
 
 @strawberry.type

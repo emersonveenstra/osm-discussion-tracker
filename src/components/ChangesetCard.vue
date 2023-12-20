@@ -8,7 +8,6 @@ defineProps<{
 	userName: string,
 	hasResponse: boolean,
 	lastActivity: string,
-	hasNewChangesets: boolean,
 	changesetComment: string,
 	status: string
 }>()
@@ -21,20 +20,21 @@ function viewDetails(csid: number) {
 </script>
 
 <template>
-	<div class="changeset-card" :class="{ hasResponse: (hasResponse && status == 'watching'), hasNewChangesets: (hasNewChangesets && status == 'watching'), isCurrentChangeset: (changesetData.currentChangeset == changesetId) }">
+	<div class="changeset-card" :class="{ hasResponse: (hasResponse && status == 'watching'), isCurrentChangeset: (changesetData.currentChangeset == changesetId) }">
 		<span class="check">
 			<input type="checkbox" :value="changesetId" v-model="checkedCards.currentCheckedCards">
 		</span>
-		<span class="info" @click="viewDetails(changesetId)">
+		<div class="info" @click="viewDetails(changesetId)">
 			<span class="changeset-creator">{{ userName }}</span>
 			<span class="changeset-comment">{{ changesetComment }}</span>
+			<ul class="changeset-flags">
+				<li class="flag needs-reply" v-if="hasResponse">Needs response</li>
+			</ul>
 			<span class="changeset-id">{{ changesetId }}</span>
-		</span>
+		</div>
 		<span class="icon">
 			<font-awesome-icon v-if="status == 'resolved'" :icon="['far', 'square-check']" />
 			<font-awesome-icon v-else-if="status === 'snoozed'" :icon="['far', 'hourglass-half']" />
-			<font-awesome-icon v-else-if="hasResponse" :icon="['fas', 'envelope']" />
-			<font-awesome-icon v-else-if="hasNewChangesets" :icon="['fas', 'triangle-exclamation']" />
 			<font-awesome-icon v-else :icon="['far', 'bell']" />
 		</span>
 	</div>
