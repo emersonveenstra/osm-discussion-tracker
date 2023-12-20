@@ -64,12 +64,12 @@ def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showR
 		all_watched_cs =  all_changeset_query.fetchall()
 		for changeset in all_watched_cs:
 			last_comment = curs.execute('select uid,ts from odt_comment where csid=%s order by ts desc limit 1', (changeset["csid"],)).fetchone()
-			if last_comment["uid"] != uid:
+			if last_comment and last_comment["uid"] != uid:
 				has_response = True
 			else:
 				has_response = False
 			user_last_changeset = curs.execute('select csid, ts from odt_changeset where uid=%s order by ts desc limit 1', (changeset["uid"],)).fetchone()
-			if user_last_changeset["ts"] > last_comment["ts"]:
+			if last_comment and user_last_changeset["ts"] > last_comment["ts"]:
 				has_new_changesets = True
 			else:
 				has_new_changesets = False
