@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useChangesetStore } from '@/stores/changesets';
-const changesetData = useChangesetStore();
+import router from '@/router';
 import { useCheckedCardsStore } from '@/stores/checkedCards';
 const checkedCards = useCheckedCardsStore();
 defineProps<{
@@ -13,14 +12,13 @@ defineProps<{
 }>()
 
 function viewDetails(csid: number) {
-	changesetData.currentChangeset = csid
-	window.location.hash = `#${csid}`
+	router.push(`/changeset/${csid}`)
 }
 
 </script>
 
 <template>
-	<div class="changeset-card" :class="{ hasResponse: (hasResponse && status == 'watching'), isCurrentChangeset: (changesetData.currentChangeset == changesetId) }">
+	<div class="changeset-card" :class="{isCurrentChangeset: (parseInt($route.params.changeset, 10) == changesetId) }">
 		<span class="check">
 			<input type="checkbox" :value="changesetId" v-model="checkedCards.currentCheckedCards">
 		</span>

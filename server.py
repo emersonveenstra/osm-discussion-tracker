@@ -123,12 +123,16 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 		changeset = all_changeset_query.fetchone()
 		if changeset:
 			is_resolved = curs.execute('select * from odt_watched where csid=%s and uid = %s', (csid, uid)).fetchone()
-			status = "Watching"
+			status = "unwatched"
+			statusDate = None
 			if is_resolved:
 				if is_resolved["snooze_until"]:
-					status = f"Snoozed until {is_resolved['snooze_until']}"
+					status = "snoozed"
+					statusDate = is_resolved['snooze_until']
 				elif is_resolved["resolved_at"]:
-					status = "Resolved"
+					status = "resolved"
+				else:
+					status = "watched"
 			full_changeset = FullChangeset(
 				csid=changeset["csid"],
 				uid=changeset["uid"],
@@ -136,7 +140,8 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 				ts=changeset["ts"],
 				comment=changeset["comment"],
 				discussion=all_comments,
-				status=status
+				status=status,
+				statusDate=statusDate
 			)
 			return full_changeset
 
@@ -168,6 +173,7 @@ class FullChangeset:
 	comment: str
 	discussion: typing.List["Comment"]
 	status: str
+	statusDate: datetime | None
 
 @strawberry.type
 class Query:
@@ -185,36 +191,30 @@ class Resolve(BaseModel):
 	uid: int
 	csid: list[int] = []
 	status: str
-	expiresAt: str | None = None
-	snoozeUntil: str | None = None
+	snoozeUntil: str = ''
 
-@app.post("/resolve", status_code=200)
-async def resolve(resolve: Resolve, response: Response):
+@app.post("/status", status_code=200)
+async def changeStatus(resolve: Resolve, response: Response):
 	print(resolve)
-	resolved_at = datetime.utcnow()
 	for csid in resolve.csid:
 		with conn.cursor() as curs:
 			is_existing = curs.execute('select * from odt_watched where uid=%s and csid=%s', (resolve.uid, csid)).fetchone()
 			if is_existing:
-				if resolve.status == 'snooze':
+				if resolve.status == 'snoozed':
 					curs.execute('update odt_watched set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, csid))
-				else:
-					curs.execute('update odt_watched set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (resolved_at, resolve.uid, csid))
+				elif resolve.status == 'resolved':
+					curs.execute('update odt_watched set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (datetime.utcnow(), resolve.uid, csid))
+				elif resolve.status == 'unwatched':
+					curs.execute('delete from odt_watched where uid=%s and csid=%s', (resolve.uid, csid))
 			else:
-				if resolve.status == 'snooze':
+				if resolve.status == 'snoozed':
 					curs.execute('insert into odt_watched (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, csid, resolve.snoozeUntil))
-				else:
-					curs.execute('insert into odt_watched (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, csid, resolved_at))
+				elif resolve.status == 'resolved':
+					curs.execute('insert into odt_watched (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, csid, datetime.utcnow()))
+				elif resolve.status == 'watched':
+					curs.execute('insert into odt_watched (uid, csid) values (%s,%s)', (resolve.uid, csid))
 			conn.commit()
 	return {"message": resolve}
-
-@app.post("/unresolve", status_code=200)
-async def resolve(unresolve: Resolve, response: Response):
-	for csid in unresolve.csid:
-		with conn.cursor() as curs:
-			curs.execute('update odt_watched set snooze_until = null, resolved_at = null where uid=%s and csid=%s', (unresolve.uid, csid))
-			conn.commit()
-	return {"message": f"{unresolve.uid} has unresolved {unresolve.csid}"}
 
 app.include_router(graphql_app, prefix="/graphql")
 

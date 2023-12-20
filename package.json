@@ -1,6 +1,7 @@
 {
   "name": "osm-discussion-tracker",
   "version": "0.0.1",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "vite --host 127.0.0.1",

@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { useChangesetStore } from '@/stores/changesets';
-const changesetData = useChangesetStore();
 import { useUserStore } from '@/stores/user';
 const userData = useUserStore();
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router';
 
-const { result, loading, error, refetch, onResult } = useQuery(gql`
+const router = useRouter()
+const route = useRoute()
+
+const { result, loading, refetch, onResult } = useQuery(gql`
 query MyQuery($csid: Int!, $uid: Int!) {
 	getChangesetDetails(csid: $csid, uid: $uid) {
 		csid
@@ -21,44 +23,43 @@ query MyQuery($csid: Int!, $uid: Int!) {
 			comment
 		}
 		status
+		statusDate
 	}
 }`, () => ({
-	csid: changesetData.currentChangeset,
+	csid: parseInt(route.params.changeset, 10),
 	uid: userData.userID,
 }))
 
 const changeset_details = computed(() => result.value?.getChangesetDetails ?? false)
 
-const status = ref(changeset_details.value.status);
-const statusText = computed(() => result.value?.getChangesetDetails.status ?? false)
+const statusText = computed(() => result.value?.getChangesetDetails.status ?? 'missing')
+const status = ref('');
 
-const achaviChangeset = computed(() => {
-	return `https://overpass-api.de/achavi/?changeset=${changesetData.currentChangeset}&relations=true`
+onResult(queryResult => {
+	if (queryResult.loading)
+		return;
+	status.value = statusText.value
 })
-
-function commentChangeset() {
-	fetch(`http://127.0.0.1:8000/resolve?uid=${userData.userID}&csid=${changesetData.currentChangeset}`)
-}
+const achaviChangeset = computed(() => {
+	return `https://overpass-api.de/achavi/?changeset=${route.params.changeset}&relations=true`
+})
 
 async function updateChangeset(status_value: string) {
 	const data = {
 		uid: userData.userID,
-		csid: [changesetData.currentChangeset],
-		status: 'resolve',
-		snoozeUntil: null
+		csid: [route.params.changeset],
+		status: status_value,
+		snoozeUntil: ''
 	}
-	let url = `http://127.0.0.1:8000/${status_value}`;
-	if (status_value === 'snooze') {
+	if (status_value === 'snoozed') {
 		const currentTime = new Date();
 		const daysToSnooze = parseInt(document.getElementById('daysToSnooze')?.value ?? '0', 10);
 		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
-		data.status = 'snooze'
-		url = "http://127.0.0.1:8000/resolve"
 	}
 	console.log(data)
 	try {
-		const response = await fetch(url, {
+		const response = await fetch("http://127.0.0.1:8000/status", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -74,16 +75,31 @@ async function updateChangeset(status_value: string) {
 	}
 }
 
+async function showUserModal(username: string) {
+	router.push(`/user/${username}`)
+}
+
 </script>
 
 <template>
 	<div :v-if="!loading" class="changeset-detail">
 		<div class="header">
-			<h1>Changeset {{ changesetData.currentChangeset }}</h1>
-			<a :href="`https://www.openstreetmap.org/changeset/${changesetData.currentChangesetClass.csid}`">OSM.org</a>
-			<a :href="`https://osmcha.org/changesets/${changesetData.currentChangeset}`">OSMCha</a>
+			<h1>Changeset {{ route.params.changeset }}</h1>
+			<a :href="`https://www.openstreetmap.org/changeset/${route.params.changeset}`">OSM.org</a>
+			<a :href="`https://osmcha.org/changesets/${route.params.changeset}`">OSMCha</a>
+			<p>
+				Status:
+				<select v-model="status">
+					<option value="watched">Watched</option>
+					<option value="resolved">Resolved</option>
+					<option value="snoozed">Snoozed</option>
+					<option value="unwatched">Unwatched</option>
+				</select>
+				<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" value="3"> days</span>
+				<button @click="updateChangeset(status)">Update</button>
+			</p>
 		</div>
-		<span>by {{ changeset_details.username }} on {{ changeset_details.ts }}Z</span>
+		<span>by <span @click="showUserModal(changeset_details.username)">{{ changeset_details.username }}</span> on {{ changeset_details.ts }}Z</span>
 		<p>{{ changeset_details.comment }}</p>
 		<section class="discussion"> 
 			<h2>Discussion</h2>
@@ -93,17 +109,7 @@ async function updateChangeset(status_value: string) {
 			</div>
 			<section class="comment">
 				<textarea></textarea>
-				<button @click="commentChangeset">Comment</button>
-			</section>
-			<section class="actions">
-				<h2>Status: {{ statusText }}</h2>
-				<select v-model="status">
-					<option value="unresolve">Watch</option>
-					<option value="resolve">Resolve</option>
-					<option value="snooze">Snooze</option>
-				</select>
-				<span v-if="status == 'snooze'">for <input id="daysToSnooze" type="number" value="3"> days</span>
-				<button @click="updateChangeset(status)" :disabled="status === ''">Update</button>
+				<button>Comment</button>
 			</section>
 			<section class="changeset-viewer">
 				<iframe :src="achaviChangeset"></iframe>
