@@ -11,6 +11,7 @@ import gql from 'graphql-tag'
 import { computed, ref } from 'vue'
 import { Changeset } from '@/classes/Changeset';
 import { useCheckedCardsStore } from '@/stores/checkedCards';
+import HelpPage from '@/components/HelpPage.vue';
 const checkedCards = useCheckedCardsStore();
 
 const listOffset = ref(0)
@@ -147,7 +148,9 @@ async function updateChangesets(status_value: string) {
 				<button class="next" @click="loadNextPage(listOffset+20)" v-if="(listOffset+20) < watched_changesets.length">Next</button>
 			</div>
 		</section>
+		<HelpPage v-if="changesetData.currentChangeset === 0" />
 		<ChangesetDetail v-if="changesetData.currentChangeset !== 0" />
+
 	</main>
 </template>
 
