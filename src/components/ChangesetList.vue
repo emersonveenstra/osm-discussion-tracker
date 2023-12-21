@@ -20,10 +20,10 @@ const { result, loading, refetch, onResult } = useQuery(gql`
 	query MyQuery($uid: Int!, $showWatched: Boolean!, $showSnoozed: Boolean!, $showResolved: Boolean!) {
 		watchedChangesets(uid: $uid, showWatched: $showWatched, showSnoozed: $showSnoozed, showResolved: $showResolved) {
 			csid
-			lastActivity
+			lastActivityTs
 			ts
+			notices
 			comment
-			hasResponse
 			username
 			status
 		}
@@ -117,10 +117,10 @@ async function updateChangesets(status_value: string) {
 				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
 					<ChangesetCard
 					:changeset-id="changeset.csid"
-					:changeset-comment="changeset.comment"
 					:user-name="changeset.username"
-					:has-response="changeset.hasResponse"
-					:last-activity="changeset.lastActivity"
+					:notices="changeset.notices"
+					:comment="changeset.comment"
+					:last-activity="changeset.lastActivityTs"
 					:status="changeset.status"
 				/>
 				</template>

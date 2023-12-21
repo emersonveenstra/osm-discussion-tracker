@@ -8,6 +8,7 @@ import os
 import psycopg
 import argparse
 import urllib.request
+import json
 from psycopg.rows import dict_row
 
 DB_HOST = os.environ.get('DB_HOST', '127.0.0.1')
@@ -39,18 +40,17 @@ def doReplication(first_state, last_state, step=1):
 			csid = int(elem.attrib['id'])
 			uid = elem.attrib.get('uid', '0')
 			username = elem.attrib.get('user', 'unknown')
-			ts = elem.attrib.get('closed_at')
-			cs_comment = ""
+			ts = datetime.fromisoformat(elem.attrib.get('closed_at'))
+			cs_tags = {}
 			for tag in elem.iterchildren(tag='tag'):
-				if tag.attrib['k'] == "comment":
-					cs_comment = tag.attrib["v"]
+				cs_tags[tag.attrib['k']] = tag.attrib['v']
 
 			if csid not in changesets:
 				changesets[csid] = {
 					"uid": uid,
 					"username": username,
 					"ts": ts,
-					"cs_comment": cs_comment
+					"tags": cs_tags
 				}
 
 
@@ -58,7 +58,7 @@ def doReplication(first_state, last_state, step=1):
 				for commentElement in discussion.iterchildren(tag='comment'):
 					comment_uid = commentElement.attrib.get('uid', '0')
 					comment_username = commentElement.attrib.get('user', 'unknown')
-					comment_ts = commentElement.attrib.get('date')
+					comment_ts = datetime.fromisoformat(commentElement.attrib.get('date'))
 					for text in commentElement.iterchildren(tag='text'):
 						comment_text = text.text
 					hashtext = f'{csid}{comment_uid}{comment_ts}'
@@ -78,21 +78,28 @@ def doReplication(first_state, last_state, step=1):
 		existing_csids = []
 		for existing_csid in existing_csid_query:
 			existing_csids.append(existing_csid["csid"])
-		existing_comment_id_query = curs.execute("select comment_id from odt_comment where comment_id = ANY(%s)", (list(comments),)).fetchall()
+		existing_comment_id_query = curs.execute("select id from odt_changeset_comment where id = ANY(%s)", (list(comments),)).fetchall()
 		existing_comment_ids = []
 		for existing_comment_id in existing_comment_id_query:
-			existing_comment_ids.append(existing_comment_id["comment_id"])
+			existing_comment_ids.append(existing_comment_id["id"])
 		for csid, data in changesets.items():
 			if csid not in existing_csids:
-				curs.execute("insert into odt_changeset (csid, uid, ts, username, comment, last_activity) values (%s, %s, %s, %s, %s,%s)", (csid, data["uid"], data["ts"], data["username"], data["cs_comment"], data["ts"]))
+				curs.execute("insert into odt_changeset (csid, uid, ts, username, last_activity_ts, last_activity_uid, tags) values (%s, %s, %s, %s, %s,%s,%s)", (csid, data["uid"], data["ts"], data["username"], data["ts"], data["uid"], json.dumps(data['tags'])))
+				test_user_exists = curs.execute("select uid from odt_user where uid = %s", (data["uid"],)).fetchone()
+				if not test_user_exists:
+					curs.execute("insert into odt_user (uid,username) values (%s,%s)", (data["uid"], data["username"]))
+
 		for comment_id, data in comments.items():
 			if comment_id not in existing_comment_ids:
 					# Add comment data to comment table
-					curs.execute("insert into odt_comment (comment_id, csid, uid, ts, username, comment) values (%s, %s, %s, %s, %s, %s)", (comment_id, data["csid"], data["comment_uid"], data["comment_ts"], data["comment_username"], data["comment_text"]))
+					curs.execute("insert into odt_changeset_comment (id, csid, uid, ts, username, text) values (%s, %s, %s, %s, %s, %s)", (comment_id, data["csid"], data["comment_uid"], data["comment_ts"], data["comment_username"], data["comment_text"]))
+					test_user_exists = curs.execute("select uid from odt_user where uid = %s", (data["comment_uid"],)).fetchone()
+					if not test_user_exists:
+						curs.execute("insert into odt_user (uid,username) values (%s,%s)", (data["comment_uid"], data["comment_username"]))
 					# Update changeset last_activity
-					cs_activity = curs.execute('select last_activity from odt_changeset where csid=%s', (data["csid"],)).fetchone()
-					if not cs_activity["last_activity"] or datetime.utcfromtimestamp(datetime.fromisoformat(data["comment_ts"]).timestamp()) > cs_activity["last_activity"]:
-						curs.execute('update odt_changeset set last_activity=%s where csid=%s', (data["comment_ts"], data["csid"]))
+					cs_activity = curs.execute('select last_activity_ts from odt_changeset where csid=%s', (data["csid"],)).fetchone()
+					if data["comment_ts"] > cs_activity["last_activity_ts"]:
+						curs.execute('update odt_changeset set last_activity_ts=%s, last_activity_uid=%s where csid=%s', (data["comment_ts"], data["comment_uid"], data["csid"]))
 
 					og_changeset = changesets.get(data['csid'])
 					if not og_changeset:
@@ -100,22 +107,22 @@ def doReplication(first_state, last_state, step=1):
 						continue
 
 					# Get all users watching the changeset
-					all_watching_users = curs.execute('select * from odt_watched where csid=%s', (data["csid"],))
+					all_watching_users = curs.execute('select * from odt_watched_changesets where csid=%s', (data["csid"],))
 					for user in all_watching_users.fetchall():
 						if user["uid"] != int(data["comment_uid"]):
-							curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
+							curs.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
 
 					# Add changeset to comment author's watched list
-					check_watched_for_comment_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
+					check_watched_for_comment_author = curs.execute('select * from odt_watched_changesets where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
 					if check_watched_for_comment_author and og_changeset["uid"] != data["comment_uid"]:
-						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
+						curs.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
 					else:
-						curs.execute('insert into odt_watched (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (data['comment_uid'], data['csid']))
-					check_watched_for_changeset_author = curs.execute('select * from odt_watched where uid=%s and csid=%s limit 1', (og_changeset['uid'], data['csid'])).fetchone()
+						curs.execute('insert into odt_watched_changesets (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (data['comment_uid'], data['csid']))
+					check_watched_for_changeset_author = curs.execute('select * from odt_watched_changesets where uid=%s and csid=%s limit 1', (og_changeset['uid'], data['csid'])).fetchone()
 					if check_watched_for_changeset_author:
-						curs.execute('update odt_watched set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (og_changeset['uid'], data['csid']))
+						curs.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (og_changeset['uid'], data['csid']))
 					else:
-						curs.execute('insert into odt_watched (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (og_changeset['uid'], data['csid']))
+						curs.execute('insert into odt_watched_changesets (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (og_changeset['uid'], data['csid']))
 		conn.commit()
 		
 	print(f'finished importing {len(changesets)} changesets and {len(comments)} comments')
@@ -141,7 +148,7 @@ def doCron(limit = 1000):
 
 argparser = argparse.ArgumentParser(description="Import OSM Changeset replication files")
 argparser.add_argument('-r', '--replication', action='store', dest='replication', type=int, help='OSM replication state number to import')
-argparser.add_argument('-c', '--cron', action='store', dest='isCron', nargs='?', const=1000, type=int, help='cron mode to import the next number of state files, limited by the number specified (default limit 1000)')
+argparser.add_argument('-c', '--cron', action='store', dest='isCron', nargs='?', const=100, type=int, help='cron mode to import the next number of state files, limited by the number specified (default limit 100)')
 
 args = argparser.parse_args()
 

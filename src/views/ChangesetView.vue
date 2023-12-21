@@ -20,17 +20,17 @@ query MyQuery($csid: Int!, $uid: Int!) {
 		comments {
 			username
 			ts
-			comment
+			text
 		}
 		notes {
 			username
 			ts
-			note
+			text
 		}
 		flags {
 			username
 			ts
-			note
+			text
 		}
 		status
 		statusDate
@@ -144,7 +144,7 @@ async function submitNote(isFlag: boolean = false) {
 			</p>
 		</div>
 		<span>by <span @click="showUserModal(changeset_details.username)">{{ changeset_details.username }}</span> on {{ changeset_details.ts }}Z</span>
-		<p>{{ changeset_details.comment }}</p>
+		<p>{{ changeset_details.csComment }}</p>
 		<section class="discussion"> 
 			<h2>Discussion</h2>
 			<div class="flag-section-wrap" v-if="allFlags.length > 0">
@@ -152,7 +152,7 @@ async function submitNote(isFlag: boolean = false) {
 				<div class="flag-wrap" v-for="flag in allFlags" :key="flag['ts']">
 					<div class="flag">
 						<p class="metadata">Flag from <a :href="`https://www.openstreetmap.org/user/${flag.username}`">{{ flag.username }}</a> at {{ flag.ts.replace('T', ' ') }}Z</p>
-						<p class="flag-text">{{ flag.note }}</p>
+						<p class="flag-text">{{ flag.text }}</p>
 					</div>
 				</div>
 			</div>
@@ -161,7 +161,7 @@ async function submitNote(isFlag: boolean = false) {
 				<div class="comment-wrap" v-for="comment in allComments" :key="comment['ts']">
 					<div class="comment">
 						<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ comment.ts.replace('T', ' ') }}Z</p>
-						<p class="comment-text">{{ comment.comment }}</p>
+						<p class="comment-text">{{ comment.text }}</p>
 					</div>
 				</div>
 				<div class="pending-comment-wrap" v-for="comment in pendingComments" :key="comment.length">
@@ -176,7 +176,7 @@ async function submitNote(isFlag: boolean = false) {
 				<div class="note-wrap" v-for="note in allNotes" :key="note['ts']">
 					<div class="note">
 						<p class="metadata">Note from <a :href="`https://www.openstreetmap.org/user/${note.username}`">{{ note.username }}</a> at {{ note.ts.replace('T', ' ') }}Z</p>
-						<p class="note-text">{{ note.note }}</p>
+						<p class="note-text">{{ note.text }}</p>
 					</div>
 				</div>
 			</div>

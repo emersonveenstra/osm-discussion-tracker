@@ -10,48 +10,54 @@ create a PostgreSQL user and database, then create the tables:
 CREATE TABLE odt_changeset (
   csid bigint not null,
   uid bigint not null,
-  ts timestamp without time zone not null,
+  ts timestamp with time zone not null,
   username text not null,
-  comment text not null,
-  last_activity timestamp without time zone not null,
+  last_activity_ts timestamp with time zone not null,
+  last_activity_uid bigint not null,
+  tags jsonb,
   UNIQUE(csid)
 );
-CREATE TABLE odt_comment (
-  comment_id text not null,
+CREATE TABLE odt_changeset_comment (
+  id text not null,
   csid bigint not null,
   uid bigint not null,
-  ts timestamp without time zone not null,
+  ts timestamp with time zone not null,
   username text not null,
-  comment text not null,
-  UNIQUE(comment_id)
+  text text not null,
+  UNIQUE(id)
 );
 CREATE TABLE odt_changeset_note (
   username text not null,
   csid bigint not null,
-  ts timestamp without time zone,
-  note text,
+  ts timestamp with time zone,
+  text text not null,
   isFlag bool default false
 );
-
 CREATE TABLE odt_user (
   uid bigint not null,
   username text not null,
-  isActive bool not null,
+  prev_usernames text[],
   isAdmin bool,
+  tags jsonb,
   UNIQUE(uid)
 );
+CREATE TABLE odt_user_auth (
+  uid bigint not null,
+  auth_token text not null,
+  UNIQUE(auth_token)
+);
 CREATE TABLE odt_user_note (
-  note_username bigint not null,
-  user_uid bigint not null,
-  ts timestamp without time zone,
-  note text,
+  uid bigint not null,
+  user_from text not null,
+  ts timestamp with time zone,
+  text text,
   isFlag bool default false
 );
-CREATE TABLE odt_watched (
+CREATE TABLE odt_watched_changesets (
   uid bigint not null,
   csid bigint not null,
-  resolved_at timestamp without time zone,
-  snooze_until timestamp without time zone
+  resolved_at timestamp with time zone,
+  snooze_until timestamp with time zone
 );
 CREATE TABLE odt_state (
   min_state bigint default 0,
