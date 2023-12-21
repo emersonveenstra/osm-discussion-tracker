@@ -89,22 +89,6 @@ def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showR
 			)
 	return all_changesets
 
-def get_changeset_comments(csid: int) -> typing.List["Comment"]:
-	all_comments = []
-	with conn.cursor() as curs:
-		all_changeset_query = curs.execute('select * from odt_comment where csid = %s order by ts asc', (csid,))
-		for changeset in all_changeset_query.fetchall():
-			all_comments.append(
-				Comment(
-					csid=changeset["csid"],
-					uid=changeset["uid"],
-					username = changeset["username"],
-					ts=changeset["ts"],
-					comment=changeset["comment"]
-				)
-			)
-	return all_comments
-
 def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 	all_comments = []
 	all_notes = []
@@ -219,7 +203,6 @@ class FullChangeset:
 @strawberry.type
 class Query:
 	watched_changesets: typing.List["Changeset"] = strawberry.field(resolver=get_watched_changesets)
-	get_changeset_comments: typing.List["Comment"] = strawberry.field(resolver=get_changeset_comments)
 	get_changeset_details: "FullChangeset" = strawberry.field(resolver=get_changeset_details)
 
 schema = strawberry.Schema(query=Query)
