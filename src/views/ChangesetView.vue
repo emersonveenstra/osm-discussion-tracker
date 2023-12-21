@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores/user';
 const userData = useUserStore();
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { computed, ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 
 const router = useRouter()
@@ -16,11 +16,21 @@ query MyQuery($csid: Int!, $uid: Int!) {
 		uid
 		username
 		ts
-		comment
-		discussion {
+		csComment
+		comments {
 			username
 			ts
 			comment
+		}
+		notes {
+			username
+			ts
+			note
+		}
+		flags {
+			username
+			ts
+			note
 		}
 		status
 		statusDate
@@ -34,6 +44,12 @@ const changeset_details = computed(() => result.value?.getChangesetDetails ?? fa
 
 const statusText = computed(() => result.value?.getChangesetDetails.status ?? 'missing')
 const status = ref('');
+
+const pendingComments: Ref<string[]> = ref([])
+
+let allComments = computed(() => result.value?.getChangesetDetails.comments ?? []);
+let allNotes = computed(() => result.value?.getChangesetDetails.notes ?? []);
+let allFlags = computed(() => result.value?.getChangesetDetails.flags ?? []);
 
 onResult(queryResult => {
 	if (queryResult.loading)
@@ -79,6 +95,35 @@ async function showUserModal(username: string) {
 	router.push(`/user/${username}`)
 }
 
+async function submitComment() {
+	const newComment = document.querySelector('.comment-textarea')?.value || '';
+	pendingComments.value.push(newComment);
+}
+
+async function submitNote(isFlag: boolean = false) {
+	const newNote = document.querySelector('.comment-textarea')?.value || '';
+	const data = {
+		csid: route.params.changeset,
+		username: userData.username,
+		note: newNote,
+		isFlag: isFlag
+	}
+	try {
+		const response = await fetch("http://127.0.0.1:8000/addChangesetNote", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		});
+
+		const result = await response.json();
+		console.log("Success:", result);
+		refetch()
+	} catch (error) {
+		console.error("Error:", error);
+	}
+}
 </script>
 
 <template>
@@ -86,7 +131,6 @@ async function showUserModal(username: string) {
 		<div class="header">
 			<h1>Changeset {{ route.params.changeset }}</h1>
 			<a :href="`https://www.openstreetmap.org/changeset/${route.params.changeset}`">OSM.org</a>
-			<a :href="`https://osmcha.org/changesets/${route.params.changeset}`">OSMCha</a>
 			<p>
 				Status:
 				<select v-model="status">
@@ -103,13 +147,44 @@ async function showUserModal(username: string) {
 		<p>{{ changeset_details.comment }}</p>
 		<section class="discussion"> 
 			<h2>Discussion</h2>
-			<div class="comment-wrap" v-for="comment in changeset_details['discussion']" :key="comment['ts']">
-				<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ comment.ts.replace('T', ' ') }}Z</p>
-				<p class="comment-text">{{ comment.comment }}</p>
+			<div class="flag-section-wrap" v-if="allFlags.length > 0">
+				<h3>Flags</h3>
+				<div class="flag-wrap" v-for="flag in allFlags" :key="flag['ts']">
+					<div class="flag">
+						<p class="metadata">Flag from <a :href="`https://www.openstreetmap.org/user/${flag.username}`">{{ flag.username }}</a> at {{ flag.ts.replace('T', ' ') }}Z</p>
+						<p class="flag-text">{{ flag.note }}</p>
+					</div>
+				</div>
 			</div>
-			<section class="comment">
-				<textarea></textarea>
-				<button>Comment</button>
+			<div class="comment-section-wrap" v-if="allComments.length > 0 || pendingComments.length > 0">
+				<h3>Comments</h3>
+				<div class="comment-wrap" v-for="comment in allComments" :key="comment['ts']">
+					<div class="comment">
+						<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ comment.ts.replace('T', ' ') }}Z</p>
+						<p class="comment-text">{{ comment.comment }}</p>
+					</div>
+				</div>
+				<div class="pending-comment-wrap" v-for="comment in pendingComments" :key="comment.length">
+					<div class="comment">
+						<p class="metadata">Pending comment</p>
+						<p class="comment-text">{{ comment }}</p>
+					</div>
+				</div>
+			</div>
+			<div class="note-section-wrap" v-if="allNotes.length > 0">
+				<h3>Notes</h3>
+				<div class="note-wrap" v-for="note in allNotes" :key="note['ts']">
+					<div class="note">
+						<p class="metadata">Note from <a :href="`https://www.openstreetmap.org/user/${note.username}`">{{ note.username }}</a> at {{ note.ts.replace('T', ' ') }}Z</p>
+						<p class="note-text">{{ note.note }}</p>
+					</div>
+				</div>
+			</div>
+			<section class="add-comment">
+				<textarea class="comment-textarea"></textarea>
+				<button class='submit-comment' @click="submitComment()">Comment</button>
+				<button class='submit-note' @click="submitNote()">Note</button>
+				<button class='submit-flag' @click="submitNote(true)">Flag</button>
 			</section>
 			<section class="changeset-viewer">
 				<iframe :src="achaviChangeset"></iframe>
@@ -143,14 +218,13 @@ async function showUserModal(username: string) {
 		text-wrap: wrap;
 		padding-left: 10px;
 	}
-	.comment textarea {
+	.add-comment textarea {
 		width: 100%;
 		height: 100px;
 		display: block;
 	}
-	.comment button, .actions button {
+	.add-comment button, .actions button {
 		margin-top: 10px;
-		appearance: none;
 		border: none;
 		padding: 10px 20px;
 	}

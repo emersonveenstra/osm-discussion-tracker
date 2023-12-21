@@ -26,16 +26,13 @@ CREATE TABLE odt_comment (
   UNIQUE(comment_id)
 );
 CREATE TABLE odt_changeset_note (
-  uid bigint not null,
+  username text not null,
   csid bigint not null,
   ts timestamp without time zone,
-  note text
+  note text,
+  isFlag bool default false
 );
-CREATE TABLE odt_changeset_flag (
-  uid bigint not null,
-  csid bigint not null,
-  flag text
-);
+
 CREATE TABLE odt_user (
   uid bigint not null,
   username text not null,
@@ -44,10 +41,11 @@ CREATE TABLE odt_user (
   UNIQUE(uid)
 );
 CREATE TABLE odt_user_note (
-  note_uid bigint not null,
+  note_username bigint not null,
   user_uid bigint not null,
   ts timestamp without time zone,
-  note text
+  note text,
+  isFlag bool default false
 );
 CREATE TABLE odt_watched (
   uid bigint not null,

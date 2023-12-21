@@ -107,6 +107,8 @@ def get_changeset_comments(csid: int) -> typing.List["Comment"]:
 
 def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 	all_comments = []
+	all_notes = []
+	all_flags = []
 	with conn.cursor() as curs:
 		all_comment_query = curs.execute('select * from odt_comment where csid = %s order by ts asc', (csid,))
 		for changeset in all_comment_query.fetchall():
@@ -116,9 +118,30 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 					uid=changeset["uid"],
 					username = changeset["username"],
 					ts=changeset["ts"],
-					comment=changeset["comment"]
+					comment=changeset["comment"],
 				)
 			)
+		all_note_query = curs.execute('select * from odt_changeset_note where csid = %s order by ts asc', (csid,))
+		for note in all_note_query.fetchall():
+			if (note['isflag']):
+				all_flags.append(
+					ChangesetFlag(
+						csid=note["csid"],
+						username=note["username"],
+						ts=note["ts"],
+						note=note["note"],
+					)
+				)
+			else:
+				all_notes.append(
+					ChangesetNote(
+						csid=note["csid"],
+						username=note["username"],
+						ts=note["ts"],
+						note=note["note"],
+					)
+				)
+			
 		all_changeset_query = curs.execute('select * from odt_changeset where csid = %s', (csid,))
 		changeset = all_changeset_query.fetchone()
 		if changeset:
@@ -138,8 +161,10 @@ def get_changeset_details(csid: int, uid: int) -> "FullChangeset":
 				uid=changeset["uid"],
 				username = changeset["username"],
 				ts=changeset["ts"],
-				comment=changeset["comment"],
-				discussion=all_comments,
+				csComment=changeset["comment"],
+				comments=all_comments,
+				notes=all_notes,
+				flags=all_flags,
 				status=status,
 				statusDate=statusDate
 			)
@@ -165,13 +190,29 @@ class Comment:
 	comment: str
 
 @strawberry.type
+class ChangesetNote:
+	csid: int
+	username: str
+	ts: datetime
+	note: str
+
+@strawberry.type
+class ChangesetFlag:
+	csid: int
+	username: str
+	ts: datetime
+	note: str
+
+@strawberry.type
 class FullChangeset:
 	csid: int
 	uid: int
 	username: str
 	ts: datetime
-	comment: str
-	discussion: typing.List["Comment"]
+	csComment: str
+	comments: typing.List["Comment"]
+	notes: typing.List["ChangesetNote"]
+	flags: typing.List["ChangesetFlag"]
 	status: str
 	statusDate: datetime | None
 
@@ -187,14 +228,20 @@ graphql_app = GraphQLRouter(schema)
 
 app = FastAPI()
 
-class Resolve(BaseModel):
+class ResolveStatus(BaseModel):
 	uid: int
 	csid: list[int] = []
 	status: str
 	snoozeUntil: str = ''
 
+class ResolveChangesetNote(BaseModel):
+	username: str
+	csid: int
+	note: str
+	isFlag: bool
+
 @app.post("/status", status_code=200)
-async def changeStatus(resolve: Resolve, response: Response):
+async def changeStatus(resolve: ResolveStatus, response: Response):
 	print(resolve)
 	for csid in resolve.csid:
 		with conn.cursor() as curs:
@@ -215,6 +262,14 @@ async def changeStatus(resolve: Resolve, response: Response):
 					curs.execute('insert into odt_watched (uid, csid) values (%s,%s)', (resolve.uid, csid))
 			conn.commit()
 	return {"message": resolve}
+
+@app.post('/addChangesetNote', status_code=200)
+async def addChangesetNote(resolve: ResolveChangesetNote, response: Response):
+	print(resolve)
+	with conn.cursor() as curs:
+		is_existing = curs.execute('select * from odt_changeset_note where username=%s and csid=%s and note=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
+		if not is_existing:
+			curs.execute('insert into odt_changeset_note (username,csid,ts,note,isFlag) values (%s,%s,%s,%s,%s)', (resolve.username, resolve.csid, datetime.utcnow(), resolve.note, resolve.isFlag))
 
 app.include_router(graphql_app, prefix="/graphql")
 

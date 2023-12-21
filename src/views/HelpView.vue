@@ -2,13 +2,13 @@
 	<section class="help-page">
 		<h1>Intro</h1>
 		<p>OSM Discussion Tracker is a web application to keep track of and follow up on changeset discussions, for both teaching new (or old!) users and curbing vandalism in OSM.</p>
-		<p>Once logged in, the left sidebar displays a list of your watched changesets. By default, a watched changeset is a changeset you have commented on or a changeset of yours that someone else commented on. Changesets can also be watched by importing OSMCha RSS feeds, and manually by going to a changeset's URL (e.g. https://osmdiscussiontracker.com/#1000000 to view changeset 1000000) and changing the status.</p>
+		<p>Once logged in, the left sidebar displays a list of your watched changesets. By default, a watched changeset is a changeset you have commented on or a changeset of yours that someone else commented on. Changesets can also be watched by importing OSMCha RSS feeds, and manually by going to a changeset's URL (e.g. https://osmdiscussiontracker.com/changeset/1000000) and changing the status.</p>
 		<h2>Changeset detail</h2>
 		<p>Clicking a changeset in the sidebar or going to a changeset URL will display the changeset detail page, showing all the information about the changeset.</p>
 		<h3>Change Status</h3>
 		<p>You can change the status of a changeset on either the changeset detail page, or selecting the changeset(s) in the sidebar. Changesets can be in one of 4 states:</p>
 		<ul>
-			<li>Unwatched: The default, will not show up on your sidebar</li>
+			<li>Unwatched: The default, will not show up on your sidebar at all</li>
 			<li>Watched: The changeset will show up on the sidebar</li>
 			<li>Snoozed: The changeset will be hidden from the sidebar (unless you use the filter to show them) for a specified number of days, then will return to the watched state</li>
 			<li>Resolved: The changeset will be hidden from the sidebar (unless you use the filter to show them)</li>
@@ -21,7 +21,7 @@
 		<h2>Sidebar</h2>
 		<p>When the sidebar first loads, it displays a list of all your watched changesets, sorted by recent activity.</p>
 		<h3>Filtering</h3>
-		<p>You can show/hide snoozed and resolved changesets using the Filter dropdown. Clicking on a changeset will display the changeset detail page. Selecting the checkbox of one or more changesets will display the option to change the status of the selected changeset(s). Currently there's a limit of 200 changesets displayed, to avoid overloading the server.</p>
+		<p>You can show/hide snoozed and resolved changesets using the Filter dropdown. Clicking on a changeset will display the changeset detail page. Selecting the checkbox of one or more changesets will display the option to change the status of the selected changeset(s).</p>
 		<h3>Flags</h3>
 		<p>If a changeset has any flags, they are displayed below the comment.</p>
 		<h2>User page</h2>
