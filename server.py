@@ -111,7 +111,7 @@ def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showR
 		all_watched_cs =  all_changeset_query.fetchall()
 		tags_to_keep = ['comment']
 		for changeset in all_watched_cs:
-			comment = changeset["tags"]["comment"]
+			comment = changeset["tags"].get("comment", "")
 			notices = []
 			if changeset["last_activity_uid"] != uid:
 				notices.append('Has Response')
@@ -254,9 +254,9 @@ async def changeStatus(resolve: ResolveStatus, response: Response):
 async def addChangesetNote(resolve: ResolveChangesetNote, response: Response):
 	print(resolve)
 	with conn.cursor() as curs:
-		is_existing = curs.execute('select * from odt_changeset_note where username=%s and csid=%s and note=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
+		is_existing = curs.execute('select * from odt_changeset_note where username=%s and csid=%s and text=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
 		if not is_existing:
-			curs.execute('insert into odt_changeset_note (username,csid,ts,note,isFlag) values (%s,%s,%s,%s,%s)', (resolve.username, resolve.csid, datetime.utcnow(), resolve.note, resolve.isFlag))
+			curs.execute('insert into odt_changeset_note (username,csid,ts,text,isFlag) values (%s,%s,%s,%s,%s)', (resolve.username, resolve.csid, datetime.utcnow(), resolve.note, resolve.isFlag))
 			if resolve.isFlag:
 				curs.execute("update odt_changeset set tags = JSONB_SET(tags, '{flagged}', %s) where csid=%s", (True, resolve.csid))
 
