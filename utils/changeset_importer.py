@@ -114,7 +114,7 @@ def doReplication(first_state, last_state, step=1):
 
 					# Add changeset to comment author's watched list
 					check_watched_for_comment_author = curs.execute('select * from odt_watched_changesets where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
-					if check_watched_for_comment_author and og_changeset["uid"] != data["comment_uid"]:
+					if check_watched_for_comment_author and og_changeset["uid"] != int(data["comment_uid"]):
 						curs.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
 					else:
 						curs.execute('insert into odt_watched_changesets (uid, csid, resolved_at, snooze_until) values (%s,%s,null,null)', (data['comment_uid'], data['csid']))
