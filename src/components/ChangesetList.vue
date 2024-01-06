@@ -51,22 +51,19 @@ async function updateChangesets(status_value: string) {
 	const data = {
 		uid: userData.userID,
 		csid: [...checkedCards.currentCheckedCards],
-		status: 'resolve',
+		status: status_value,
 		snoozeUntil: ''
 	}
-	let url = `http://127.0.0.1:8000/${status_value}`;
-	if (status_value === 'snooze') {
+	if (status_value === 'snoozed') {
 		const currentTime = new Date();
-		// @ts-ignore
+		//@ts-ignore
 		const daysToSnooze = parseInt(document.getElementById('daysToSnooze')?.value ?? '0', 10);
 		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
-		data.status = 'snooze'
-		url = "http://127.0.0.1:8000/resolve"
 	}
 	console.log(data)
 	try {
-		const response = await fetch(url, {
+		const response = await fetch("http://127.0.0.1:8000/status", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -76,8 +73,8 @@ async function updateChangesets(status_value: string) {
 
 		const result = await response.json();
 		console.log("Success:", result);
-		refetch()
-		checkedCards.currentCheckedCards = []
+		refetch();
+		checkedCards.currentCheckedCards = [];
 	} catch (error) {
 		console.error("Error:", error);
 	}
@@ -101,11 +98,12 @@ async function updateChangesets(status_value: string) {
 				<span v-if="watched_changesets && !loading">{{ watched_changesets.length }} changesets</span>
 				<div class="mass-update" v-if="checkedCards.currentCheckedCards.length > 0">
 					<select v-model="status">
-					<option value="unresolve">Watch</option>
-					<option value="resolve">Resolve</option>
-					<option value="snooze">Snooze</option>
+					<option value="watched">Watch</option>
+					<option value="resolved">Resolve</option>
+					<option value="snoozed">Snooze</option>
+					<option value="unwatched">Unwatch</option>
 					</select>
-					<span v-if="status == 'snooze'">for <input id="daysToSnooze" type="number" value="3"> days</span>
+					<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" value="3"> days</span>
 					<button @click="updateChangesets(status)" :disabled="status === ''">Update</button>
 				</div>
 			</div>
