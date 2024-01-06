@@ -124,6 +124,11 @@ async function submitNote(isFlag: boolean = false) {
 		console.error("Error:", error);
 	}
 }
+
+function getSnoozeDays(snoozeDate: Date) {
+	const timeDiff = new Date(snoozeDate).getTime() - (new Date().getTime())
+	return Math.round(timeDiff / 1000 / 86400).toString(10)
+}
 </script>
 
 <template>
@@ -139,7 +144,7 @@ async function submitNote(isFlag: boolean = false) {
 					<option value="snoozed">Snoozed</option>
 					<option value="unwatched">Unwatched</option>
 				</select>
-				<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" value="3"> days</span>
+				<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" :value="getSnoozeDays(changeset_details.statusDate)"> days</span>
 				<button @click="updateChangeset(status)">Update</button>
 			</p>
 		</div>
