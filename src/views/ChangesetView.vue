@@ -69,8 +69,8 @@ async function updateChangeset(status_value: string) {
 	}
 	if (status_value === 'snoozed') {
 		const currentTime = new Date();
-		const daysToSnooze = parseInt(document.getElementById('daysToSnooze')?.value ?? '0', 10);
-		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
+		const hoursToSnooze = parseInt(document.getElementById('hoursToSnooze')?.value ?? '0', 10);
+		currentTime.setTime(currentTime.getTime() + (hoursToSnooze * 3600 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
 	}
 	console.log(data)
@@ -127,7 +127,7 @@ async function submitNote(isFlag: boolean = false) {
 
 function getSnoozeDays(snoozeDate: Date) {
 	const timeDiff = new Date(snoozeDate).getTime() - (new Date().getTime())
-	return Math.round(timeDiff / 1000 / 86400).toString(10)
+	return Math.round(timeDiff / 1000 / 3600).toString(10)
 }
 </script>
 
@@ -144,7 +144,7 @@ function getSnoozeDays(snoozeDate: Date) {
 					<option value="snoozed">Snoozed</option>
 					<option value="unwatched">Unwatched</option>
 				</select>
-				<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" :value="getSnoozeDays(changeset_details.statusDate)"> days</span>
+				<span v-if="status == 'snoozed'">for <input id="hoursToSnooze" type="number" :value="getSnoozeDays(changeset_details.statusDate)"> hours</span>
 				<button @click="updateChangeset(status)">Update</button>
 			</p>
 		</div>
