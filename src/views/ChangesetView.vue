@@ -148,7 +148,7 @@ function getSnoozeDays(snoozeDate: Date) {
 				<button @click="updateChangeset(status)">Update</button>
 			</p>
 		</div>
-		<span>by <span @click="showUserModal(changeset_details.username)">{{ changeset_details.username }}</span> on {{ changeset_details.ts }}Z</span>
+		<span>by <a :href="`/user/${changeset_details.username}`" @click="showUserModal(changeset_details.username)">{{ changeset_details.username }}</a> on {{ changeset_details.ts }}Z</span>
 		<p>{{ changeset_details.csComment }}</p>
 		<section class="discussion"> 
 			<h2>Discussion</h2>
