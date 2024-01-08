@@ -2,7 +2,7 @@
 	<section class="help-page">
 		<h1>Intro</h1>
 		<p>OSM Discussion Tracker is a web application to keep track of and follow up on changeset discussions, for both teaching new (or old!) users and curbing vandalism in OSM.</p>
-		<p>Once logged in, the left sidebar displays a list of your watched changesets. By default, a watched changeset is a changeset you have commented on or a changeset of yours that someone else commented on. Changesets can also be watched by importing OSMCha RSS feeds, and manually by going to a changeset's URL (e.g. https://osmdiscussiontracker.com/changeset/1000000) and changing the status.</p>
+		<p>Once logged in, the left sidebar displays a list of your watched changesets. By default, a watched changeset is a changeset you have commented on or a changeset of yours that someone else commented on. Changesets can also be watched manually by going to a changeset's URL (e.g. https://osmdiscussiontracker.com/changeset/1000000) and changing the status to Watched.</p>
 		<h2>Changeset detail</h2>
 		<p>Clicking a changeset in the sidebar or going to a changeset URL will display the changeset detail page, showing all the information about the changeset.</p>
 		<h3>Change Status</h3>
@@ -15,9 +15,9 @@
 		</ul>
 		<blockquote>For both snoozed and resolved changesets, if a user comments on the changeset, it will revert to the watched state.</blockquote>
 		<h3>Changeset Comment/Note</h3>
-		<p>On a changeset page, you can add a comment or note. Adding a comment will add a standard OSM comment to the changeset, then either snooze or resolve the changeset. Adding a note will display the note in ODT, but not create a comment. Notes are <b>PUBLIC</b> and viewable by anyone logged into ODT, so please use them only for notes about escalations and other relevant information and do not use the notes as a way to avoid engaging users.</p>
+		<p>On a changeset page, you can add a comment or note. Adding a comment will add a standard OSM comment to the changeset. Adding a note will display the note in ODT, but not create a comment. Notes are <b>PUBLIC</b> and viewable by anyone logged into ODT, so please use them only for notes about escalations and other relevant information and do not use the notes as a way to avoid engaging users.</p>
 		<h3>Flag Changeset</h3>
-		<p>Flagging a changeset is a quick way to mark it as malicious. The option to flag changesets is only available after you've written a changeset, to avoid using the flagging system as a way to avoid engaging users. Flagging a changeset shows up for all users, and a list of flagged changesets shows up in a user's page. Because of this, only flag changesets that are malicious vandalism, do not flag changesets for honest mistakes or accidental vandalism. Admins have the ability to remove flags from a changeset, please respect their decision</p>
+		<p>Flagging a changeset is a quick way to mark it as malicious. The option to flag changesets is only available after you've written a comment, to disallow using the flagging system as a way to avoid engaging users. Flagging a changeset shows up for all users, and a list of flagged changesets shows up in a user's page. Because of this, only flag changesets that are malicious vandalism, do not flag changesets for honest mistakes or accidental vandalism. Admins have the ability to remove flags from a changeset, please respect their decision</p>
 		<h2>Sidebar</h2>
 		<p>When the sidebar first loads, it displays a list of all your watched changesets, sorted by recent activity.</p>
 		<h3>Filtering</h3>
