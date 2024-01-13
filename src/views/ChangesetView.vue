@@ -202,7 +202,7 @@ function getSnoozeDays(snoozeDate: Date) {
 	.changeset-detail {
 		padding: 0 1em;
 	}
-	.header * {
+	.changeset-detail .header * {
 		display: inline-block;
 		vertical-align: middle;
 	}

@@ -11,6 +11,7 @@ const checkedCards = useCheckedCardsStore();
 
 const listOffset = ref(0)
 const status = ref('')
+const showFilterDropdown = ref(false)
 
 const showWatchedCS = ref(true)
 const showSnoozedCS = ref(false)
@@ -85,26 +86,30 @@ async function updateChangesets(status_value: string) {
 	<main>
 		<section class="changeset-list">
 			<div class="header" v-if="watched_changesets || loading">
-				<p>Your watched changesets</p>
-				<span><button @click="refetch()">Refresh list</button></span>
+				<p>
+					<span>Your watched changesets</span>
+					<span><button @click="refetch()"><font-awesome-icon icon="fa-solid fa-rotate-right" /></button></span>
+				</p>
 				<div class="filter-wrapper">
-					<button>Filter</button>
-					<div class="filter-options">
-						<label>Watched<input type="checkbox" name="watched" v-model="showWatchedCS" checked></label>
-						<label>Snoozed<input type="checkbox" name="snoozed" v-model="showSnoozedCS"></label>
-						<label>Resolved<input type="checkbox" name="resolved" v-model="showResolvedCS"></label>
+					<div class="filter">
+						<span class="dropdown-toggle" @click="showFilterDropdown = !showFilterDropdown">Filter <font-awesome-icon icon="fa-solid fa-caret-down" /></span>
+						<ul class="filter-options" v-if="showFilterDropdown">
+							<li><label><input type="checkbox" name="watched" v-model="showWatchedCS" checked><span>Watched</span></label></li>
+							<li><label><input type="checkbox" name="snoozed" v-model="showSnoozedCS"><span>Snoozed</span></label></li>
+							<li><label><input type="checkbox" name="resolved" v-model="showResolvedCS"><span>Resolved</span></label></li>
+						</ul>
 					</div>
-				</div>
-				<span v-if="watched_changesets && !loading">{{ watched_changesets.length }} changesets</span>
-				<div class="mass-update" v-if="checkedCards.currentCheckedCards.length > 0">
-					<select v-model="status">
-					<option value="watched">Watch</option>
-					<option value="resolved">Resolve</option>
-					<option value="snoozed">Snooze</option>
-					<option value="unwatched">Unwatch</option>
-					</select>
-					<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" value="3"> days</span>
-					<button @click="updateChangesets(status)" :disabled="status === ''">Update</button>
+					<div class="mass-update" v-if="checkedCards.currentCheckedCards.length > 0">
+						<span class="update-count">{{ checkedCards.currentCheckedCards.length }} selected</span>
+						<select v-model="status">
+							<option value="watched">Watch</option>
+							<option value="resolved">Resolve</option>
+							<option value="snoozed">Snooze</option>
+							<option value="unwatched">Unwatch</option>
+						</select>
+						<span v-if="status == 'snoozed'">for <input id="daysToSnooze" type="number" value="3"> days</span>
+						<button @click="updateChangesets(status)" :disabled="status === ''">Update</button>
+					</div>
 				</div>
 			</div>
 
@@ -146,6 +151,12 @@ async function updateChangesets(status_value: string) {
 
 	.changeset-list .header {
 		flex: 0 0 auto;
+		padding-top: 10px;
+	}
+
+	.changeset-list .header p {
+		display: flex;
+		justify-content: space-between;
 	}
 
 	.changeset-list .list, .changeset-list .loading {
@@ -157,5 +168,37 @@ async function updateChangesets(status_value: string) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.dropdown-toggle {
+		cursor: pointer;
+	}
+
+	.filter-wrapper {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.filter {
+		position: relative;
+	}
+	.filter-options {
+		position: absolute;
+		top: 20px;
+		left: 0;
+		padding: 0;
+		margin: 0;
+		background-color: white;
+	}
+
+	.filter li {
+		display: block;
+		width: max-content;
+		padding: 2px 5px;
+	}
+
+	.filter span {
+		padding-left: 5px;
+		display: inline-block;
 	}
 </style>
