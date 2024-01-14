@@ -70,6 +70,13 @@ const achaviChangeset = computed(() => {
 	return `https://overpass-api.de/achavi/?changeset=${route.params.changeset}&relations=true`
 })
 
+function didUserComment() {
+	const usersComments = allComments.value.filter((c) => {
+		return c.username === userData.username
+	})
+	return usersComments.length !== 0
+}
+
 async function updateChangeset(status_value: string) {
 	const data = {
 		uid: userData.userID,
@@ -201,8 +208,8 @@ function getSnoozeDays(snoozeDate: Date) {
 			<section class="add-comment" v-if="userData.userID !== 0">
 				<textarea class="comment-textarea"></textarea>
 				<button class='submit-comment' @click="submitComment()">Comment</button>
-				<button class='submit-note' @click="submitNote()">Note</button>
-				<button class='submit-flag' @click="submitNote(true)">Flag</button>
+				<button class='submit-note' @click="submitNote()" v-if="didUserComment()">Note</button>
+				<button class='submit-flag' @click="submitNote(true)" v-if="didUserComment()">Flag</button>
 			</section>
 			<section class="changeset-viewer">
 				<iframe :src="achaviChangeset"></iframe>
