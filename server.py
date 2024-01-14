@@ -63,7 +63,7 @@ class FullChangeset:
 	status: str
 	statusDate: datetime | None
 
-conn = psycopg.connect(f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}", row_factory=dict_row)
+conn_string = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 all_watched_cs_query = '''
 	select distinct
@@ -87,7 +87,7 @@ all_watched_cs_query = '''
 
 def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showResolved: bool) -> list[Changeset]:
 	all_changesets = []
-	with conn.cursor() as curs:
+	with psycopg.connect(conn_string, row_factory=dict_row) as conn:
 		query_filter = ''
 		if showWatched:
 			if not showSnoozed:
@@ -107,7 +107,7 @@ def get_watched_changesets(uid: int, showWatched: bool, showSnoozed: bool, showR
 		elif showResolved:
 			query_filter = 'and odt_watched_changesets.resolved_at is not null'
 
-		all_changeset_query = curs.execute(all_watched_cs_query.format(query_filter), (uid,))
+		all_changeset_query = conn.execute(all_watched_cs_query.format(query_filter), (uid,))
 		all_watched_cs =  all_changeset_query.fetchall()
 		tags_to_keep = ['comment']
 		for changeset in all_watched_cs:
@@ -141,8 +141,8 @@ def get_changeset_details(csid: int, uid: int) -> FullChangeset:
 	all_comments = []
 	all_notes = []
 	all_flags = []
-	with conn.cursor() as curs:
-		all_comment_query = curs.execute('select * from odt_changeset_comment where csid = %s order by ts asc', (csid,))
+	with psycopg.connect(conn_string, row_factory=dict_row) as conn:
+		all_comment_query = conn.execute('select * from odt_changeset_comment where csid = %s order by ts asc', (csid,))
 		for changeset in all_comment_query.fetchall():
 			all_comments.append(
 				Comment(
@@ -153,7 +153,7 @@ def get_changeset_details(csid: int, uid: int) -> FullChangeset:
 					text=changeset["text"],
 				)
 			)
-		all_note_query = curs.execute('select * from odt_changeset_note where csid = %s order by ts asc', (csid,))
+		all_note_query = conn.execute('select * from odt_changeset_note where csid = %s order by ts asc', (csid,))
 		for note in all_note_query.fetchall():
 			if (note['isflag']):
 				all_flags.append(
@@ -174,10 +174,10 @@ def get_changeset_details(csid: int, uid: int) -> FullChangeset:
 					)
 				)
 			
-		all_changeset_query = curs.execute('select * from odt_changeset where csid = %s', (csid,))
+		all_changeset_query = conn.execute('select * from odt_changeset where csid = %s', (csid,))
 		changeset = all_changeset_query.fetchone()
 		if changeset:
-			is_resolved = curs.execute('select * from odt_watched_changesets where csid=%s and uid = %s', (csid, uid)).fetchone()
+			is_resolved = conn.execute('select * from odt_watched_changesets where csid=%s and uid = %s', (csid, uid)).fetchone()
 			status = "unwatched"
 			statusDate = None
 			csComment = changeset["tags"]["comment"]
@@ -231,34 +231,33 @@ class ResolveChangesetNote(BaseModel):
 async def changeStatus(resolve: ResolveStatus, response: Response):
 	print(resolve)
 	for csid in resolve.csid:
-		with conn.cursor() as curs:
-			is_existing = curs.execute('select * from odt_watched_changesets where uid=%s and csid=%s', (resolve.uid, csid)).fetchone()
+		with psycopg.connect(conn_string, row_factory=dict_row) as conn:
+			is_existing = conn.execute('select * from odt_watched_changesets where uid=%s and csid=%s', (resolve.uid, csid)).fetchone()
 			if is_existing:
 				if resolve.status == 'snoozed':
-					curs.execute('update odt_watched_changesets set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, csid))
+					conn.execute('update odt_watched_changesets set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, csid))
 				elif resolve.status == 'resolved':
-					curs.execute('update odt_watched_changesets set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (datetime.utcnow(), resolve.uid, csid))
+					conn.execute('update odt_watched_changesets set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (datetime.utcnow(), resolve.uid, csid))
 				elif resolve.status == 'unwatched':
-					curs.execute('delete from odt_watched_changesets where uid=%s and csid=%s', (resolve.uid, csid))
+					conn.execute('delete from odt_watched_changesets where uid=%s and csid=%s', (resolve.uid, csid))
 			else:
 				if resolve.status == 'snoozed':
-					curs.execute('insert into odt_watched_changesets (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, csid, resolve.snoozeUntil))
+					conn.execute('insert into odt_watched_changesets (uid, csid, snooze_until) values (%s,%s,%s)', (resolve.uid, csid, resolve.snoozeUntil))
 				elif resolve.status == 'resolved':
-					curs.execute('insert into odt_watched_changesets (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, csid, datetime.utcnow()))
+					conn.execute('insert into odt_watched_changesets (uid, csid, resolved_at) values (%s,%s,%s)', (resolve.uid, csid, datetime.utcnow()))
 				elif resolve.status == 'watched':
-					curs.execute('insert into odt_watched_changesets (uid, csid) values (%s,%s)', (resolve.uid, csid))
-			conn.commit()
+					conn.execute('insert into odt_watched_changesets (uid, csid) values (%s,%s)', (resolve.uid, csid))
 	return {"message": resolve}
 
 @app.post('/addChangesetNote', status_code=200)
 async def addChangesetNote(resolve: ResolveChangesetNote, response: Response):
 	print(resolve)
-	with conn.cursor() as curs:
-		is_existing = curs.execute('select * from odt_changeset_note where username=%s and csid=%s and text=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
+	with psycopg.connect(conn_string, row_factory=dict_row) as conn:
+		is_existing = conn.execute('select * from odt_changeset_note where username=%s and csid=%s and text=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
 		if not is_existing:
-			curs.execute('insert into odt_changeset_note (username,csid,ts,text,isFlag) values (%s,%s,%s,%s,%s)', (resolve.username, resolve.csid, datetime.utcnow(), resolve.note, resolve.isFlag))
+			conn.execute('insert into odt_changeset_note (username,csid,ts,text,isFlag) values (%s,%s,%s,%s,%s)', (resolve.username, resolve.csid, datetime.utcnow(), resolve.note, resolve.isFlag))
 			if resolve.isFlag:
-				curs.execute("update odt_changeset set tags = JSONB_SET(tags, '{flagged}', %s) where csid=%s", (True, resolve.csid))
+				conn.execute("update odt_changeset set tags = JSONB_SET(tags, '{flagged}', %s) where csid=%s", (True, resolve.csid))
 
 app.include_router(graphql_app, prefix="/graphql")
 
