@@ -116,9 +116,6 @@ async function updateChangesets(status_value: string) {
 			<div class="loading" v-if="userData.access_token === ''">
 				<a href="/">Log In to OSM</a>
 			</div>
-			<div class="loading" v-else-if="loading">
-				<p>Loading changesets...</p>
-			</div>
 			<div class="error" v-else-if="error">
 				<p>Error: unable to load changesets</p>
 			</div>
@@ -133,6 +130,9 @@ async function updateChangesets(status_value: string) {
 					:status="changeset.status"
 				/>
 				</template>
+			</div>
+			<div class="loading" v-else>
+				<p>Loading changesets...</p>
 			</div>
 			<div class="pagination" v-if="watched_changesets">
 				<button class="prev" @click="loadNextPage(listOffset-20)" v-if="listOffset != 0">Prev</button>
