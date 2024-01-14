@@ -10,7 +10,7 @@ export const useUserStore = defineStore('user', () => {
 	const auth = osmAuth({
 		client_id: "qFeGC16EFxzSLHyEljEJkSxMcwsuI9E9Wt269xFB5BY",
 		redirect_uri: window.location.origin + '/',
-		scope: "read_prefs write_diary",
+		scope: "read_prefs write_diary write_api",
 		auto: true,
 		singlepage: true,
 	});
@@ -25,6 +25,12 @@ export const useUserStore = defineStore('user', () => {
 				username.value = rjson.user.display_name
 			})
 	}
+
+	if (window.location.search.slice(1).split('&').some(p => p.startsWith('code='))) {
+		auth.authenticate(function() {
+		  // Fully authed at this point
+		});
+	  }
 
 	return { userID, username, accessToken, auth }
 })

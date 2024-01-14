@@ -113,7 +113,7 @@ async function updateChangesets(status_value: string) {
 				</div>
 			</div>
 
-			<div class="loading" v-if="userData.access_token === ''">
+			<div class="loading" v-if="userData.accessToken === ''">
 				<a href="/">Log In to OSM</a>
 			</div>
 			<div class="error" v-else-if="error">
