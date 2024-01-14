@@ -17,7 +17,7 @@ const showWatchedCS = ref(true)
 const showSnoozedCS = ref(false)
 const showResolvedCS = ref(false)
 
-const { result, loading, refetch, onResult } = useQuery(gql`
+const { result, loading, refetch, onResult, error } = useQuery(gql`
 	query MyQuery($uid: Int!, $showWatched: Boolean!, $showSnoozed: Boolean!, $showResolved: Boolean!) {
 		watchedChangesets(uid: $uid, showWatched: $showWatched, showSnoozed: $showSnoozed, showResolved: $showResolved) {
 			csid
@@ -116,7 +116,10 @@ async function updateChangesets(status_value: string) {
 			<div class="loading" v-if="loading">
 				<p>Loading changesets...</p>
 			</div>
-			<div class="list" v-if="watched_changesets && !loading">
+			<div class="error" v-else-if="error">
+				<p>Error: unable to load changesets</p>
+			</div>
+			<div class="list" v-else-if="watched_changesets && !loading">
 				<template v-for="changeset in watched_changesets.slice(listOffset, listOffset+20)"  :key="changeset.csid">
 					<ChangesetCard
 					:changeset-id="changeset.csid"
