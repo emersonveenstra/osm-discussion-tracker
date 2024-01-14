@@ -48,7 +48,7 @@ query MyQuery($csid: Int!, $uid: Int!) {
 }`, () => ({
 	csid: currentChangeset.value,
 	uid: userData.userID,
-}))
+}), {fetchPolicy: 'no-cache'})
 
 const changeset_details = computed(() => result.value?.getChangesetDetails ?? false)
 
