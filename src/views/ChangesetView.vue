@@ -55,7 +55,7 @@ const changeset_details = computed(() => result.value?.getChangesetDetails ?? fa
 const statusText = computed(() => result.value?.getChangesetDetails.status ?? 'missing')
 const status = ref('');
 
-const pendingComments: Ref<string[]> = ref([])
+const pendingComments: Ref<Map<string, string>> = ref(new Map())
 
 let allComments = computed(() => result.value?.getChangesetDetails.comments ?? []);
 let allNotes = computed(() => result.value?.getChangesetDetails.notes ?? []);
@@ -116,7 +116,11 @@ async function showUserModal(username: string) {
 async function submitComment() {
 	//@ts-ignore
 	const newComment = document.querySelector('.comment-textarea')?.value || '';
-	pendingComments.value.push(newComment);
+	const newForm = new URLSearchParams()
+	newForm.append('text', newComment)
+	userData.auth.fetch(`https://www.openstreetmap.org/api/0.6/changeset/${route.params.changeset}/comment`, {method: 'POST', body: newForm})
+	.then(response => response.text()).then(rtext => console.log(rtext))
+	pendingComments.value.set(route.params.changeset, newComment)
 }
 
 async function submitNote(isFlag: boolean = false) {
@@ -189,10 +193,10 @@ function getSnoozeDays(snoozeDate: Date) {
 						<p class="comment-text" v-html="`${linkifyString(comment.text)}`"></p>
 					</div>
 				</div>
-				<div class="pending-comment-wrap" v-for="comment in pendingComments" :key="comment.length">
+				<div class="pending-comment-wrap" v-for="comment in pendingComments.get(route.params.changeset)" :key="comment.length">
 					<div class="comment">
 						<p class="metadata">Pending comment</p>
-						<p class="comment-text">{{ comment }}</p>
+						<p class="comment-text"  v-html="`${linkifyString(comment)}`"></p>
 					</div>
 				</div>
 			</div>
