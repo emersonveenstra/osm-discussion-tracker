@@ -3,13 +3,22 @@ import { useUserStore } from '@/stores/user';
 const userData = useUserStore();
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import linkifyString from 'linkify-string';
 
 const router = useRouter()
 const route = useRoute()
 
+const currentChangeset = ref(parseInt(route.params.changeset, 10))
+
+watch(
+      () => route.params.changeset,
+      async newId => {
+		console.log('hi')
+        currentChangeset.value = parseInt(route.params.changeset, 10)
+      }
+    )
 const { result, loading, refetch, onResult } = useQuery(gql`
 query MyQuery($csid: Int!, $uid: Int!) {
 	getChangesetDetails(csid: $csid, uid: $uid) {
@@ -37,7 +46,7 @@ query MyQuery($csid: Int!, $uid: Int!) {
 		statusDate
 	}
 }`, () => ({
-	csid: parseInt(route.params.changeset, 10),
+	csid: currentChangeset.value,
 	uid: userData.userID,
 }))
 
@@ -140,7 +149,7 @@ function getSnoozeDays(snoozeDate: Date) {
 		<div class="header">
 			<h1>Changeset {{ route.params.changeset }}</h1>
 			<a :href="`https://www.openstreetmap.org/changeset/${route.params.changeset}`">OSM.org</a>
-			<p>
+			<p v-if="userData.userID !== 0">
 				Status:
 				<select v-model="status">
 					<option value="watched">Watched</option>
@@ -189,7 +198,7 @@ function getSnoozeDays(snoozeDate: Date) {
 					</div>
 				</div>
 			</div>
-			<section class="add-comment">
+			<section class="add-comment" v-if="userData.userID !== 0">
 				<textarea class="comment-textarea"></textarea>
 				<button class='submit-comment' @click="submitComment()">Comment</button>
 				<button class='submit-note' @click="submitNote()">Note</button>

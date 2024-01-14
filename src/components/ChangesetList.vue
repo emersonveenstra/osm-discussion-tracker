@@ -17,6 +17,7 @@ const showWatchedCS = ref(true)
 const showSnoozedCS = ref(false)
 const showResolvedCS = ref(false)
 
+
 const { result, loading, refetch, onResult, error } = useQuery(gql`
 	query MyQuery($uid: Int!, $showWatched: Boolean!, $showSnoozed: Boolean!, $showResolved: Boolean!) {
 		watchedChangesets(uid: $uid, showWatched: $showWatched, showSnoozed: $showSnoozed, showResolved: $showResolved) {
@@ -28,13 +29,12 @@ const { result, loading, refetch, onResult, error } = useQuery(gql`
 			username
 			status
 		}
-	}`,
-	{
+	}`, () => ({
 		uid: userData.userID,
-		showWatched: showWatchedCS,
-		showSnoozed: showSnoozedCS,
-		showResolved: showResolvedCS
-	}
+		showWatched: showWatchedCS.value,
+		showSnoozed: showSnoozedCS.value,
+		showResolved: showResolvedCS.value
+	})
 )
 
 const watched_changesets = computed(() => result.value?.watchedChangesets)
@@ -113,7 +113,10 @@ async function updateChangesets(status_value: string) {
 				</div>
 			</div>
 
-			<div class="loading" v-if="loading">
+			<div class="loading" v-if="userData.access_token === ''">
+				<a href="/">Log In to OSM</a>
+			</div>
+			<div class="loading" v-else-if="loading">
 				<p>Loading changesets...</p>
 			</div>
 			<div class="error" v-else-if="error">
