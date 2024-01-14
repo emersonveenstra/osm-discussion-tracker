@@ -5,6 +5,7 @@ import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { computed, ref, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
+import linkifyString from 'linkify-string';
 
 const router = useRouter()
 const route = useRoute()
@@ -69,6 +70,7 @@ async function updateChangeset(status_value: string) {
 	}
 	if (status_value === 'snoozed') {
 		const currentTime = new Date();
+		//@ts-ignore
 		const hoursToSnooze = parseInt(document.getElementById('hoursToSnooze')?.value ?? '0', 10);
 		currentTime.setTime(currentTime.getTime() + (hoursToSnooze * 3600 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
@@ -96,11 +98,13 @@ async function showUserModal(username: string) {
 }
 
 async function submitComment() {
+	//@ts-ignore
 	const newComment = document.querySelector('.comment-textarea')?.value || '';
 	pendingComments.value.push(newComment);
 }
 
 async function submitNote(isFlag: boolean = false) {
+	//@ts-ignore
 	const newNote = document.querySelector('.comment-textarea')?.value || '';
 	const data = {
 		csid: route.params.changeset,
@@ -166,7 +170,7 @@ function getSnoozeDays(snoozeDate: Date) {
 				<div class="comment-wrap" v-for="comment in allComments" :key="comment['ts']">
 					<div class="comment">
 						<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ comment.ts.replace('T', ' ') }}Z</p>
-						<p class="comment-text">{{ comment.text }}</p>
+						<p class="comment-text" v-html="`${linkifyString(comment.text)}`"></p>
 					</div>
 				</div>
 				<div class="pending-comment-wrap" v-for="comment in pendingComments" :key="comment.length">
