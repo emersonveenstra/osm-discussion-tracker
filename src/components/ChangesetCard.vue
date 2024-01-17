@@ -22,14 +22,14 @@ function viewDetails(csid: number) {
 		<span class="check">
 			<input type="checkbox" :value="changesetId" v-model="checkedCards.currentCheckedCards">
 		</span>
-		<div class="info" @click="viewDetails(changesetId)">
+		<a class="info" :href="`/changeset/${changesetId}`" @click.stop.prevent="viewDetails(changesetId)">
 			<span class="changeset-creator">{{ userName }}</span>
 			<span class="changeset-comment">{{ comment }}</span>
 			<ul class="changeset-notices" v-for="notice in notices" :key="notice.toLocaleLowerCase().replace(' ', '-')">
 				<li class="notice" :class="notice.toLocaleLowerCase().replace(' ', '-')">{{ notice }}</li>
 			</ul>
 			<span class="changeset-id">{{ changesetId }}</span>
-		</div>
+		</a>
 		<span class="icon">
 			<font-awesome-icon v-if="status == 'resolved'" :icon="['far', 'square-check']" />
 			<font-awesome-icon v-else-if="status == 'snoozed'" :icon="['far', 'hourglass-half']" />
@@ -57,6 +57,8 @@ function viewDetails(csid: number) {
 	}
 	.info {
 		flex: 1 1 100%;
+		text-decoration: none;
+		color: inherit;
 	}
 
 	.icon {
