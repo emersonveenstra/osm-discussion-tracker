@@ -93,7 +93,7 @@ async function updateChangeset(status_value: string) {
 	}
 	console.log(data)
 	try {
-		const response = await fetch("http://127.0.0.1:8000/status", {
+		const response = await fetch("https://api.osmdiscussiontracker.com/status", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -133,10 +133,11 @@ async function submitNote(isFlag: boolean = false) {
 		isFlag: isFlag
 	}
 	try {
-		const response = await fetch("http://127.0.0.1:8000/addChangesetNote", {
+		const response = await fetch("https://api.osmdiscussiontracker.com/addChangesetNote", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				"Authorization": `Bearer ${userData.accessToken}`
 			},
 			body: JSON.stringify(data),
 		});

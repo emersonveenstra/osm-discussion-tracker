@@ -64,7 +64,7 @@ async function updateChangesets(status_value: string) {
 	}
 	console.log(data)
 	try {
-		const response = await fetch("http://127.0.0.1:8000/status", {
+		const response = await fetch("https://api.osmdiscussiontracker.com/status", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
