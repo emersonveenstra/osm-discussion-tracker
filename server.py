@@ -1,11 +1,14 @@
+import json
 import os
+from typing import Annotated
 import psycopg
 import strawberry
 from datetime import datetime
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Header, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from strawberry.fastapi import GraphQLRouter
+import urllib.request
 
 from datetime import datetime
 from psycopg.rows import dict_row
@@ -250,8 +253,13 @@ async def changeStatus(resolve: ResolveStatus, response: Response):
 	return {"message": resolve}
 
 @app.post('/addChangesetNote', status_code=200)
-async def addChangesetNote(resolve: ResolveChangesetNote, response: Response):
-	print(resolve)
+async def addChangesetNote(resolve: ResolveChangesetNote, response: Response, authorization: Annotated[str | None, Header()] = None):
+	print(resolve, authorization)
+	check_headers = urllib.request.Request('https://www.openstreetmap.org/api/0.6/user/details.json')
+	check_headers.add_header('Authorization', authorization)
+	with urllib.request.urlopen(check_headers) as f:
+		real_username = json.loads(f.read().decode('utf-8'))["user"]["display_name"]
+		print(real_username)
 	with psycopg.connect(conn_string, row_factory=dict_row) as conn:
 		is_existing = conn.execute('select * from odt_changeset_note where username=%s and csid=%s and text=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
 		if not is_existing:
