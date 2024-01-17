@@ -8,6 +8,8 @@ from fastapi import FastAPI, Header, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from strawberry.fastapi import GraphQLRouter
+from strawberry.extensions import AddValidationRules
+from graphql.validation import NoSchemaIntrospectionCustomRule
 import urllib.request
 
 from datetime import datetime
@@ -212,9 +214,11 @@ class Query:
 	watched_changesets: list[Changeset] = strawberry.field(resolver=get_watched_changesets)
 	get_changeset_details: FullChangeset = strawberry.field(resolver=get_changeset_details)
 
-schema = strawberry.Schema(query=Query)
+schema = strawberry.Schema(query=Query, extensions=[
+	AddValidationRules([NoSchemaIntrospectionCustomRule])
+])
 
-graphql_app = GraphQLRouter(schema)
+graphql_app = GraphQLRouter(schema, graphql_ide=None)
 
 app = FastAPI()
 
