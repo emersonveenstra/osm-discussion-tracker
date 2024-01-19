@@ -59,6 +59,7 @@ function viewDetails(csid: number) {
 		flex: 1 1 100%;
 		text-decoration: none;
 		color: inherit;
+		padding-top: 4px;
 	}
 
 	.icon {

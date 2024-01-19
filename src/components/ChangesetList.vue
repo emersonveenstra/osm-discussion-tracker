@@ -85,7 +85,7 @@ async function updateChangesets(status_value: string) {
 <template>
 	<main>
 		<section class="changeset-list">
-			<div class="header" v-if="watched_changesets || loading">
+			<div class="header" v-if="(watched_changesets || loading) && userData.accessToken !== ''">
 				<p>
 					<span>Your watched changesets</span>
 					<span><button @click="refetch()"><font-awesome-icon icon="fa-solid fa-rotate-right" /></button></span>

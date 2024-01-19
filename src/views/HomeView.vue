@@ -4,19 +4,32 @@
 	import HelpPage from '@/components/HelpPage.vue'
 </script>
 <template>
-		<main class="home">
-			<section class="header">
+		<div class="home">
+			<div class="header">
 				<h1>OSM Discussion Tracker</h1>
-			</section>
-			<section class="login" v-if="userData.accessToken === ''">
-				<a href='/login'>Please Login to OSM</a>
-			</section>
+			</div>
 			<section class="help">
 				<HelpPage />
 			</section>
-		</main>
+		</div>
 </template>
 
 <style>
+	.home {
+		display: flex;
+		flex-direction: column;
+		padding: 10px 20px;
+		height: 100%;
+	}
 
+	.login {
+		flex: 1 1 100%;
+		justify-content: center;
+		align-items: center;
+		display: flex;
+	}
+
+	h1 {
+		margin: 10px 0;
+	}
 </style>
