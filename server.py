@@ -273,6 +273,12 @@ async def addChangesetNote(resolve: ResolveChangesetNote, response: Response, au
 			if resolve.isFlag:
 				conn.execute("update odt_changeset set tags = JSONB_SET(tags, '{flagged}', %s) where csid=%s", (True, resolve.csid))
 
+@app.get('/lastChangeset', status_code=200)
+async def getLastChangeset():
+	with psycopg.connect(conn_string, row_factory=dict_row) as conn:
+		is_existing = conn.execute('select * from odt_changeset order by csid desc limit 1').fetchone()
+		return f'{is_existing["csid"]} at {is_existing["ts"]}'
+
 app.include_router(graphql_app, prefix="/graphql")
 
 app.add_middleware(
