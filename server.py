@@ -185,7 +185,7 @@ def get_changeset_details(csid: int, uid: int) -> FullChangeset:
 			is_resolved = conn.execute('select * from odt_watched_changesets where csid=%s and uid = %s', (csid, uid)).fetchone()
 			status = "unwatched"
 			statusDate = None
-			csComment = changeset["tags"]["comment"]
+			csComment = changeset["tags"].get("comment", "")
 			if is_resolved:
 				if is_resolved["snooze_until"]:
 					status = "snoozed"
