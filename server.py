@@ -245,7 +245,7 @@ async def changeStatus(resolve: ResolveStatus, response: Response):
 					conn.execute('update odt_watched_changesets set snooze_until = %s where uid=%s and csid=%s', (resolve.snoozeUntil, resolve.uid, csid))
 				elif resolve.status == 'resolved':
 					conn.execute('update odt_watched_changesets set resolved_at = %s, snooze_until = null where uid=%s and csid=%s', (datetime.utcnow(), resolve.uid, csid))
-				elif resolve.status == 'resolved':
+				elif resolve.status == 'watched':
 					conn.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (resolve.uid, csid))
 				elif resolve.status == 'unwatched':
 					conn.execute('delete from odt_watched_changesets where uid=%s and csid=%s', (resolve.uid, csid))
