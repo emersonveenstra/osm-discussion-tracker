@@ -55,7 +55,7 @@ const changeset_details = computed(() => result.value?.getChangesetDetails ?? fa
 const statusText = computed(() => result.value?.getChangesetDetails.status ?? 'missing')
 const status = ref('');
 
-const pendingComments: Ref<Map<string, string>> = ref(new Map())
+const pendingComments: Ref<Map<string, string[]>> = ref(new Map())
 
 let allComments = computed(() => result.value?.getChangesetDetails.comments ?? []);
 let allNotes = computed(() => result.value?.getChangesetDetails.notes ?? []);
@@ -120,7 +120,7 @@ async function submitComment() {
 	newForm.append('text', newComment)
 	userData.auth.fetch(`https://www.openstreetmap.org/api/0.6/changeset/${route.params.changeset}/comment`, {method: 'POST', body: newForm})
 	.then(response => response.text()).then(rtext => console.log(rtext))
-	pendingComments.value.set(route.params.changeset, newComment)
+	pendingComments.value.set(route.params.changeset, [newComment])
 }
 
 async function submitNote(isFlag: boolean = false) {
