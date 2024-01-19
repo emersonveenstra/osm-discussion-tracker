@@ -29,7 +29,8 @@ import ChangesetList from './components/ChangesetList.vue'
 		height: 100%;
 		overflow: auto;
 		flex: 0 0 auto;
-		width: 300px;
+		width: 30%;
+		max-width: 300px;
 		display: flex;
 		flex-flow: column;
 	}

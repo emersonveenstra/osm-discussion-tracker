@@ -126,6 +126,9 @@ async function submitComment() {
 async function submitNote(isFlag: boolean = false) {
 	//@ts-ignore
 	const newNote = document.querySelector('.comment-textarea')?.value || '';
+	if (newNote === '') {
+		return;
+	}
 	const data = {
 		csid: route.params.changeset,
 		username: userData.username,
@@ -144,6 +147,7 @@ async function submitNote(isFlag: boolean = false) {
 
 		const result = await response.json();
 		console.log("Success:", result);
+		document.querySelector('.comment-textarea').value = ''
 		refetch()
 	} catch (error) {
 		console.error("Error:", error);
@@ -151,9 +155,22 @@ async function submitNote(isFlag: boolean = false) {
 }
 
 function getSnoozeDays(snoozeDate: Date) {
+	if (!snoozeDate) {
+		return 0;
+	}
 	const timeDiff = new Date(snoozeDate).getTime() - (new Date().getTime())
 	return Math.round(timeDiff / 1000 / 3600).toString(10)
 }
+
+function stylizeDate(dateString: string) {
+	console.log(dateString)
+	if (!dateString) {
+		return '';
+	}
+	const newDate = new Date(`${dateString.slice(0,-6)}Z`);
+	return newDate.toUTCString()
+}
+
 </script>
 
 <template>
@@ -161,7 +178,11 @@ function getSnoozeDays(snoozeDate: Date) {
 		<div class="header">
 			<h1>Changeset {{ route.params.changeset }}</h1>
 			<a :href="`https://www.openstreetmap.org/changeset/${route.params.changeset}`">OSM.org</a>
-			<p v-if="userData.userID !== 0">
+			
+		</div>
+		<span>by <a :href="`https://www.openstreetmap.org/user/${changeset_details.username}`">{{ changeset_details.username }}</a> on {{ stylizeDate(changeset_details.ts) }}</span>
+		<p>{{ changeset_details.csComment }}</p>
+		<p v-if="userData.userID !== 0">
 				Status:
 				<select v-model="status">
 					<option value="watched">Watched</option>
@@ -172,9 +193,6 @@ function getSnoozeDays(snoozeDate: Date) {
 				<span v-if="status == 'snoozed'">for <input id="hoursToSnooze" type="number" :value="getSnoozeDays(changeset_details.statusDate)"> hours</span>
 				<button @click="updateChangeset(status)">Update</button>
 			</p>
-		</div>
-		<span>by <a :href="`/user/${changeset_details.username}`" @click="showUserModal(changeset_details.username)">{{ changeset_details.username }}</a> on {{ changeset_details.ts }}Z</span>
-		<p>{{ changeset_details.csComment }}</p>
 		<section class="discussion"> 
 			<h2>Discussion</h2>
 			<div class="flag-section-wrap" v-if="allFlags.length > 0">
@@ -190,7 +208,7 @@ function getSnoozeDays(snoozeDate: Date) {
 				<h3>Comments</h3>
 				<div class="comment-wrap" v-for="comment in allComments" :key="comment['ts']">
 					<div class="comment">
-						<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ comment.ts.replace('T', ' ') }}Z</p>
+						<p class="metadata">Comment from <a :href="`https://www.openstreetmap.org/user/${comment.username}`">{{ comment.username }}</a> at {{ stylizeDate(comment.ts.replace('T', ' ')) }}</p>
 						<p class="comment-text" v-html="`${linkifyString(comment.text)}`"></p>
 					</div>
 				</div>
@@ -214,7 +232,6 @@ function getSnoozeDays(snoozeDate: Date) {
 				<textarea class="comment-textarea"></textarea>
 				<button class='submit-comment' @click="submitComment()">Comment</button>
 				<button class='submit-note' @click="submitNote()" v-if="didUserComment()">Note</button>
-				<button class='submit-flag' @click="submitNote(true)" v-if="didUserComment()">Flag</button>
 			</section>
 			<section class="changeset-viewer">
 				<iframe :src="achaviChangeset"></iframe>
@@ -252,11 +269,14 @@ function getSnoozeDays(snoozeDate: Date) {
 		width: 100%;
 		height: 100px;
 		display: block;
+		font-family: inherit;
 	}
 	.add-comment button, .actions button {
 		margin-top: 10px;
 		border: none;
 		padding: 10px 20px;
+		cursor: pointer;
+		margin-right: 10px;
 	}
 	.actions {
 		padding-top: 20px;

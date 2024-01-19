@@ -79,4 +79,18 @@ function viewDetails(csid: number) {
 	.isCurrentChangeset {
 		background-color: gray;
 	}
+
+	.changeset-notices {
+		list-style: none;
+		padding: 0;
+		margin-bottom: 10px;
+	}
+
+	.changeset-notices li {
+		background: lightblue;
+		border-radius: 5px;
+		font-size: 12px;
+		display: inline-block;
+		padding: 2px 5px;
+	}
 </style>
