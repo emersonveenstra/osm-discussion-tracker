@@ -21,6 +21,8 @@
 		<p>On a changeset page, you can add a comment or note. Adding a comment will add a standard OSM comment to the changeset. Adding a note will display the note in ODT, but not create a comment in OSM. Notes are <b>PUBLIC</b> and viewable by anyone logged into ODT, so please use them only for notes about escalations and other relevant information and do not use the notes as a way to avoid engaging users.</p>
 		<h2>Support</h2>
 		<p>The main support channel is <a href="https://matrix.to/#/#osmdiscussiontracker:matrix.org">#osmdiscussiontracker:matrix.org</a> on Matrix (all GitHub users can access it via <a href="https://gitter.im">Gitter</a>). I'm also active in the #software channel of the <a href="https://discord.gg/openstreetmap">OSM World Discord</a>, feel free to ping me there.</p>
+		<h2>Contributing</h2>
+		<p>This program is open source <a href="https://github.com/emersonveenstra/osm-discussion-tracker">on GitHub</a>, please open issues with any bugs and contribute if you are able!</p>
 	</section>
 </template>
 
