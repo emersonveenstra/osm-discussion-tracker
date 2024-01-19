@@ -15,7 +15,6 @@ const currentChangeset = ref(parseInt(route.params.changeset, 10))
 watch(
       () => route.params.changeset,
       async newId => {
-		console.log('hi')
         currentChangeset.value = parseInt(route.params.changeset, 10)
       }
     )
@@ -91,7 +90,6 @@ async function updateChangeset(status_value: string) {
 		currentTime.setTime(currentTime.getTime() + (hoursToSnooze * 3600 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
 	}
-	console.log(data)
 	try {
 		const response = await fetch("https://api.osmdiscussiontracker.com/status", {
 			method: "POST",
@@ -163,7 +161,6 @@ function getSnoozeDays(snoozeDate: Date) {
 }
 
 function stylizeDate(dateString: string) {
-	console.log(dateString)
 	if (!dateString) {
 		return '';
 	}

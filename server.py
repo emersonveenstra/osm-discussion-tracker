@@ -236,7 +236,6 @@ class ResolveChangesetNote(BaseModel):
 
 @app.post("/status", status_code=200)
 async def changeStatus(resolve: ResolveStatus, response: Response):
-	print(resolve)
 	for csid in resolve.csid:
 		with psycopg.connect(conn_string, row_factory=dict_row) as conn:
 			is_existing = conn.execute('select * from odt_watched_changesets where uid=%s and csid=%s', (resolve.uid, csid)).fetchone()
@@ -260,12 +259,10 @@ async def changeStatus(resolve: ResolveStatus, response: Response):
 
 @app.post('/addChangesetNote', status_code=200)
 async def addChangesetNote(resolve: ResolveChangesetNote, response: Response, authorization: Annotated[str | None, Header()] = None):
-	print(resolve, authorization)
 	check_headers = urllib.request.Request('https://www.openstreetmap.org/api/0.6/user/details.json')
 	check_headers.add_header('Authorization', authorization)
 	with urllib.request.urlopen(check_headers) as f:
 		real_username = json.loads(f.read().decode('utf-8'))["user"]["display_name"]
-		print(real_username)
 	with psycopg.connect(conn_string, row_factory=dict_row) as conn:
 		is_existing = conn.execute('select * from odt_changeset_note where username=%s and csid=%s and text=%s and isFlag=%s', (resolve.username, resolve.csid, resolve.note, resolve.isFlag)).fetchone()
 		if not is_existing:
