@@ -62,7 +62,6 @@ async function updateChangesets(status_value: string) {
 		currentTime.setTime(currentTime.getTime() + (daysToSnooze * 86400 * 1000))
 		data.snoozeUntil = currentTime.toISOString();
 	}
-	console.log(data)
 	try {
 		const response = await fetch("https://api.osmdiscussiontracker.com/status", {
 			method: "POST",
