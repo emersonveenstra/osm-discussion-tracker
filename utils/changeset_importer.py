@@ -110,7 +110,7 @@ def doReplication(first_state, last_state, step=1):
 				all_watching_users = curs.execute('select * from odt_watched_changesets where csid=%s', (data["csid"],))
 				for user in all_watching_users.fetchall():
 					if user["uid"] != int(data["comment_uid"]):
-						curs.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (data['comment_uid'], data['csid']))
+						curs.execute('update odt_watched_changesets set resolved_at = null, snooze_until = null where uid=%s and csid=%s', (user["uid"], data['csid']))
 
 				# Add changeset to comment author's watched list
 				check_watched_for_comment_author = curs.execute('select * from odt_watched_changesets where uid=%s and csid=%s limit 1', (data['comment_uid'], data['csid'])).fetchone()
