@@ -1,5 +1,9 @@
 # osm-discussion-tracker
 
+# Status
+
+ODT is no longer in active development, see https://github.com/emersonveenstra/osm-discussion-tracker/issues/36 for more information
+
 Webapp to track changeset discussions you're interested in
 
 ## Initial setup

@@ -20,7 +20,5 @@
 		<p>When the sidebar first loads, it displays a list of all your watched changesets, sorted by recent activity.</p>
 		<h3>Filtering</h3>
 		<p>You can show/hide snoozed and resolved changesets using the Filter dropdown. Clicking on a changeset will display the changeset detail page. Selecting the checkbox of one or more changesets will display the option to change the status of the selected changeset(s).</p>
-		<h2>Support</h2>
-		<p>The main support channel is <a href="https://matrix.to/#/#osmdiscussiontracker:matrix.org">#osmdiscussiontracker:matrix.org</a> on Matrix (all GitHub users can access it via <a href="https://gitter.im">Gitter</a>). I'm also active in the #software channel of the <a href="https://discord.gg/openstreetmap">OSM World Discord</a>, feel free to ping me there.</p>
 	</section>
 </template>
